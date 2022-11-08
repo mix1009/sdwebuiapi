@@ -10,6 +10,8 @@ API calls are (almost) direct translation from http://127.0.0.1:7860/docs as of 
 
 # Usage
 
+webuiapi_demo.ipynb contains example code with images.
+
 ## create API client
 ```
 import webuiapi
@@ -48,6 +50,28 @@ result1.parameters
 ```
 result2 = api.img2img(images=[result1.image], prompt="cute cat", seed=5555, cfg_scale=6.5, denoising_strength=0.6)
 result2.image
+```
+
+## img2img inpainting
+```
+from PIL import Image, ImageDraw
+
+mask = Image.new('RGB', result2.image.size, color = 'black')
+# mask = result2.image.copy()
+draw = ImageDraw.Draw(mask)
+draw.ellipse((210,150,310,250), fill='white')
+draw.ellipse((80,120,160,120+80), fill='white')
+
+# mask
+
+inpainting_result = api.img2img(images=[result2.image],
+                                mask_image=mask,
+                                inpainting_fill=1,
+                                prompt="cute cat",
+                                seed=104,
+                                cfg_scale=5.0,
+                                denoising_strength=0.7)
+inpainting_result.image
 ```
 
 ## extra-single-image
