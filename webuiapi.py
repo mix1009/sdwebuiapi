@@ -35,7 +35,13 @@ class WebUIApi:
         self.default_sampler = sampler
         self.default_steps = steps
         
-    def _toApiResult(self, r):
+    def _to_api_result(self, response):
+        
+        if response.status_code != 200:
+            raise RuntimeError(response.status_code, response.text)
+            
+        r = response.json()
+        images = []
         if 'images' in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r['images']]
         elif 'image' in r.keys():
@@ -43,7 +49,10 @@ class WebUIApi:
         
         info = ''
         if 'info' in r.keys():
-            info = json.loads(r['info'])
+            try:
+                info = json.loads(r['info'])
+            except:
+                info = r['info']
         elif 'html_info' in r.keys():
             info = r['html_info']
 
@@ -117,8 +126,7 @@ class WebUIApi:
             "sampler_index": sampler_index,
         }
         response = requests.post(url=f'{self.baseurl}/txt2img', json=payload)
-        r = response.json()
-        return self._toApiResult(r)
+        return self._to_api_result(response)
 
 
 
@@ -200,8 +208,7 @@ class WebUIApi:
             payload['mask']= b64_img(mask_image)
             
         response = requests.post(url=f'{self.baseurl}/img2img', json=payload)
-        r = response.json()
-        return self._toApiResult(r)
+        return self._to_api_result(response)
 
     def extra_single_image(self,
                            image, # PIL Image
@@ -237,8 +244,7 @@ class WebUIApi:
         }
         
         response = requests.post(url=f'{self.baseurl}/extra-single-image', json=payload)
-        r = response.json()
-        return self._toApiResult(r)
+        return self._to_api_result(response)
 
     def extra_batch_images(self,
                            images, # list of PIL images
@@ -289,6 +295,61 @@ class WebUIApi:
         }
         
         response = requests.post(url=f'{self.baseurl}/extra-batch-images', json=payload)
-        r = response.json()
-        return self._toApiResult(r)
-    
+        return self._to_api_result(response)
+ 
+    # XXX always return empty info (2022/11/08)
+    def png_info(self, image):
+        payload = {
+            "image": b64_img(image),
+        }
+        
+        response = requests.post(url=f'{self.baseurl}/png-info', json=payload)
+        return self._to_api_result(response)
+
+    # XXX always returns 500 internal server error (2022/11/08)
+    def interrogate(self, image):
+        payload = {
+            "image": b64_img(image),
+        }
+        
+        response = requests.post(url=f'{self.baseurl}/interrogate', json=payload)
+        return self._to_api_result(response)
+
+    def get_options(self):        
+        response = requests.get(url=f'{self.baseurl}/options')
+        return response.json()
+
+    # XXX Setting options via API is not supported
+#     def set_options(self, options):        
+#         response = requests.post(url=f'{self.baseurl}/options', json=options)
+#         return response
+#         return response.json()
+
+    def get_cmd_flags(self):        
+        response = requests.get(url=f'{self.baseurl}/cmd-flags')
+        return response.json()
+    def get_samplers(self):        
+        response = requests.get(url=f'{self.baseurl}/samplers')
+        return response.json()
+    def get_sd_models(self):        
+        response = requests.get(url=f'{self.baseurl}/sd-models')
+        return response.json()
+    def get_hypernetworks(self):        
+        response = requests.get(url=f'{self.baseurl}/hypernetworks')
+        return response.json()
+    def get_face_restorers(self):        
+        response = requests.get(url=f'{self.baseurl}/face-restorers')
+        return response.json()
+    def get_realesrgan_models(self):        
+        response = requests.get(url=f'{self.baseurl}/realesrgan-models')
+        return response.json()
+    def get_prompt_styles(self):        
+        response = requests.get(url=f'{self.baseurl}/prompt-styles')
+        return response.json()
+    def get_artist_categories(self):        
+        response = requests.get(url=f'{self.baseurl}/artist-categories')
+        return response.json()
+    def get_artists(self):        
+        response = requests.get(url=f'{self.baseurl}/artists')
+        return response.json()
+
