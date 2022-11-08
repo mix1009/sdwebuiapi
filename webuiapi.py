@@ -4,6 +4,7 @@ import io
 import base64
 from PIL import Image
 from dataclasses import dataclass
+from enum import Enum
 
 @dataclass
 class WebUIApiResult:
@@ -353,3 +354,14 @@ class WebUIApi:
         response = requests.get(url=f'{self.baseurl}/artists')
         return response.json()
 
+class Upscaler(str, Enum):    
+    none = 'None'
+    Lanczos = 'Lanczos'
+    Nearest = 'Nearest'
+    LDSR = 'LDSR'
+    BSRGAN = 'BSRGAN'
+    ESRGAN_4x = 'ESRGAN_4x'
+    R_ESRGAN_General_4xV3 = 'R-ESRGAN General 4xV3'
+    ScuNET_GAN = 'ScuNET GAN'
+    ScuNET_PSNR = 'ScuNET PSNR'
+    SwinIR_4x = 'SwinIR 4x'

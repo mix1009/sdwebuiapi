@@ -19,7 +19,10 @@ import webuiapi
 # create API client
 api = webuiapi.WebUIApi()
 
-# you can set default sampler, steps.
+# set host, port
+api = webuiapi.WebUIApi(host='127.0.0.1', port=7860)
+
+# set default sampler, steps.
 api = webuiapi.WebUIApi(sampler='Euler a', steps=20)
 ```
 
@@ -77,7 +80,7 @@ inpainting_result.image
 ## extra-single-image
 ```
 result3 = api.extra_single_image(image=result2.image,
-                                 upscaler_1="ESRGAN_4x",
+                                 upscaler_1=webuiapi.Upscaler.ESRGAN_4x,
                                  upscaling_resize=1.5)
 print(result3.image.size)
 result3.image
@@ -86,7 +89,7 @@ result3.image
 ## extra-batch-images
 ```
 result4 = api.extra_batch_images(images=[result1.image, result2.image],
-                                 upscaler_1="ESRGAN_4x",
+                                 upscaler_1=webuiapi.Upscaler.ESRGAN_4x,
                                  upscaling_resize=1.5)
 len(result4.images)
 ```
