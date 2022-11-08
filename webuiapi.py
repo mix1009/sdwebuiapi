@@ -22,8 +22,16 @@ def b64_img(image: Image):
     return img_base64
 
 class WebUIApi:
-    def __init__(self, sampler='Euler a', steps=20):
-        self.baseurl = 'http://127.0.0.1:7860/sdapi/v1'
+    def __init__(self,
+                 host='127.0.0.1',
+                 port=7860,
+                 baseurl=None,
+                 sampler='Euler a',
+                 steps=20):
+        if baseurl is None:
+            baseurl = f'http://{host}:{port}/sdapi/v1'
+                
+        self.baseurl = baseurl
         self.default_sampler = sampler
         self.default_steps = steps
         
