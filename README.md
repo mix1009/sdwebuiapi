@@ -3,9 +3,13 @@ API client for AUTOMATIC1111/stable-diffusion-webui
 
 Supports txt2img, img2img, extra-single-image, extra-batch-images API calls.
 
-API support have to be enabled from webui. It's explained [here](https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API).
+API support have to be enabled from webui. Add --api when running webui.
+It's explained [here](https://github.com/AUTOMATIC1111/stable-diffusion-webui/wiki/API).
 
-API calls are (almost) direct translation from http://127.0.0.1:7860/docs as of 2022/11/08.
+You can use --api-auth user1:pass1,user2:pass2 option to enable authentication for api access.
+(Since it's basic http authentication the password is transmitted in cleartext)
+
+API calls are (almost) direct translation from http://127.0.0.1:7860/docs as of 2022/11/21.
 
 
 # Usage
@@ -19,11 +23,14 @@ import webuiapi
 # create API client
 api = webuiapi.WebUIApi()
 
-# set host, port
+# create API client with custom host, port
 api = webuiapi.WebUIApi(host='127.0.0.1', port=7860)
 
-# set default sampler, steps.
+# create API client with default sampler, steps.
 api = webuiapi.WebUIApi(sampler='Euler a', steps=20)
+
+# optionally set username, password when --api-auth is set on webui.
+api.set_auth('username', 'password')
 ```
 
 ## txt2img
@@ -111,3 +118,31 @@ result4.images[1]
 ```
 ![extra_batch_images_2](https://user-images.githubusercontent.com/1288793/200459542-aa8547a0-f6db-436b-bec1-031a93a7b1d4.jpg)
 
+
+### Configuration APIs
+```
+# return map of current options
+options = api.get_options()
+
+# change sd model
+options = {}
+options['sd_model_checkpoint'] = 'model.ckpt [7460a6fa]'
+api.set_options(options)
+
+# when calling set_options, do not pass all options returned by get_options().
+# it makes webui unusable (2022/11/21).
+
+# get available sd models
+api.get_sd_models()
+
+# misc get apis
+api.get_samplers()
+api.get_cmd_flags()      
+api.get_hypernetworks()
+api.get_face_restorers()
+api.get_realesrgan_models()
+api.get_prompt_styles()
+api.get_artist_categories()
+api.get_artists()
+
+```
