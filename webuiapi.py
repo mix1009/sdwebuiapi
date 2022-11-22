@@ -36,6 +36,11 @@ class WebUIApi:
         self.default_sampler = sampler
         self.default_steps = steps
         
+        self.session = requests.Session()
+        
+    def set_auth(self, username, password):
+        self.session.auth = (username, password)
+        
     def _to_api_result(self, response):
         
         if response.status_code != 200:
@@ -126,9 +131,8 @@ class WebUIApi:
             "override_settings": override_settings,
             "sampler_index": sampler_index,
         }
-        response = requests.post(url=f'{self.baseurl}/txt2img', json=payload)
+        response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
         return self._to_api_result(response)
-
 
 
     def img2img(self,
@@ -208,7 +212,7 @@ class WebUIApi:
         if mask_image is not None:
             payload['mask']= b64_img(mask_image)
             
-        response = requests.post(url=f'{self.baseurl}/img2img', json=payload)
+        response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
         return self._to_api_result(response)
 
     def extra_single_image(self,
@@ -244,7 +248,7 @@ class WebUIApi:
             "image": b64_img(image),
         }
         
-        response = requests.post(url=f'{self.baseurl}/extra-single-image', json=payload)
+        response = self.session.post(url=f'{self.baseurl}/extra-single-image', json=payload)
         return self._to_api_result(response)
 
     def extra_batch_images(self,
@@ -295,63 +299,62 @@ class WebUIApi:
             "imageList": image_list,
         }
         
-        response = requests.post(url=f'{self.baseurl}/extra-batch-images', json=payload)
+        response = self.session.post(url=f'{self.baseurl}/extra-batch-images', json=payload)
         return self._to_api_result(response)
  
-    # XXX always return empty info (2022/11/08)
+    # XXX always return empty info (2022/11/14)
     def png_info(self, image):
         payload = {
             "image": b64_img(image),
         }
         
-        response = requests.post(url=f'{self.baseurl}/png-info', json=payload)
+        response = self.session.post(url=f'{self.baseurl}/png-info', json=payload)
         return self._to_api_result(response)
 
-    # XXX always returns 500 internal server error (2022/11/08)
+    # XXX always returns empty info (2022/11/14)
     def interrogate(self, image):
         payload = {
             "image": b64_img(image),
         }
         
-        response = requests.post(url=f'{self.baseurl}/interrogate', json=payload)
+        response = self.session.post(url=f'{self.baseurl}/interrogate', json=payload)
         return self._to_api_result(response)
 
     def get_options(self):        
-        response = requests.get(url=f'{self.baseurl}/options')
+        response = self.session.get(url=f'{self.baseurl}/options')
         return response.json()
 
-    # XXX Setting options via API is not supported
-#     def set_options(self, options):        
-#         response = requests.post(url=f'{self.baseurl}/options', json=options)
-#         return response
-#         return response.json()
+    # working (2022/11/21)
+    def set_options(self, options):        
+        response = self.session.post(url=f'{self.baseurl}/options', json=options)
+        return response.json()
 
     def get_cmd_flags(self):        
-        response = requests.get(url=f'{self.baseurl}/cmd-flags')
+        response = self.session.get(url=f'{self.baseurl}/cmd-flags')
         return response.json()
     def get_samplers(self):        
-        response = requests.get(url=f'{self.baseurl}/samplers')
+        response = self.session.get(url=f'{self.baseurl}/samplers')
         return response.json()
     def get_sd_models(self):        
-        response = requests.get(url=f'{self.baseurl}/sd-models')
+        response = self.session.get(url=f'{self.baseurl}/sd-models')
         return response.json()
     def get_hypernetworks(self):        
-        response = requests.get(url=f'{self.baseurl}/hypernetworks')
+        response = self.session.get(url=f'{self.baseurl}/hypernetworks')
         return response.json()
     def get_face_restorers(self):        
-        response = requests.get(url=f'{self.baseurl}/face-restorers')
+        response = self.session.get(url=f'{self.baseurl}/face-restorers')
         return response.json()
     def get_realesrgan_models(self):        
-        response = requests.get(url=f'{self.baseurl}/realesrgan-models')
+        response = self.session.get(url=f'{self.baseurl}/realesrgan-models')
         return response.json()
     def get_prompt_styles(self):        
-        response = requests.get(url=f'{self.baseurl}/prompt-styles')
+        response = self.session.get(url=f'{self.baseurl}/prompt-styles')
         return response.json()
     def get_artist_categories(self):        
-        response = requests.get(url=f'{self.baseurl}/artist-categories')
+        response = self.session.get(url=f'{self.baseurl}/artist-categories')
         return response.json()
     def get_artists(self):        
-        response = requests.get(url=f'{self.baseurl}/artists')
+        response = self.session.get(url=f'{self.baseurl}/artists')
         return response.json()
 
 class Upscaler(str, Enum):    
