@@ -11,6 +11,11 @@ You can use --api-auth user1:pass1,user2:pass2 option to enable authentication f
 
 API calls are (almost) direct translation from http://127.0.0.1:7860/docs as of 2022/11/21.
 
+# Install
+
+```
+pip install webuiapi
+```
 
 # Usage
 
