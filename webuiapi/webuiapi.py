@@ -94,11 +94,15 @@ class WebUIApi:
                 s_tmin=0,
                 s_noise=1,
                 override_settings={},
+                override_settings_restore_afterwards=True,
+                sampler_name=None, # use this instead of sampler_index
                 sampler_index=None,
                 steps=None,
                ):
         if sampler_index is None:
             sampler_index = self.default_sampler
+        if sampler_name is None:
+            sampler_name = self.default_sampler
         if steps is None:
             steps = self.default_steps
 
@@ -129,6 +133,8 @@ class WebUIApi:
             "s_tmin": s_tmin,
             "s_noise": s_noise,
             "override_settings": override_settings,
+            "override_settings_restore_afterwards": override_settings_restore_afterwards,
+            "sampler_name": sampler_name,
             "sampler_index": sampler_index,
         }
         response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
@@ -145,6 +151,7 @@ class WebUIApi:
                 inpaint_full_res=True,
                 inpaint_full_res_padding=0,
                 inpainting_mask_invert=0,
+                initial_noise_multiplier=0,
                 prompt="",
                 styles=[],
                 seed=-1,
@@ -166,10 +173,14 @@ class WebUIApi:
                 s_tmin=0,
                 s_noise=1,
                 override_settings={},
+                override_settings_restore_afterwards=True,
                 include_init_images=False,
                 steps=None,
+                sampler_name=None, # use this instead of sampler_index
                 sampler_index=None,
         ):
+        if sampler_name is None:
+            sampler_name = self.default_sampler
         if sampler_index is None:
             sampler_index = self.default_sampler
         if steps is None:
@@ -184,6 +195,7 @@ class WebUIApi:
             "inpaint_full_res": inpaint_full_res,
             "inpaint_full_res_padding": inpaint_full_res_padding,
             "inpainting_mask_invert": inpainting_mask_invert,
+            "initial_noise_multiplier": initial_noise_multiplier,
             "prompt": prompt,
             "styles": styles,
             "seed": seed,
@@ -206,6 +218,8 @@ class WebUIApi:
             "s_tmin": s_tmin,
             "s_noise": s_noise,
             "override_settings": override_settings,
+            "override_settings_restore_afterwards": override_settings_restore_afterwards,
+            "sampler_name": sampler_name,
             "sampler_index": sampler_index,
             "include_init_images": include_init_images,
         }
@@ -302,7 +316,7 @@ class WebUIApi:
         response = self.session.post(url=f'{self.baseurl}/extra-batch-images', json=payload)
         return self._to_api_result(response)
  
-    # XXX always return empty info (2022/11/14)
+    # XXX 500 error (2022/12/26)
     def png_info(self, image):
         payload = {
             "image": b64_img(image),
@@ -311,7 +325,7 @@ class WebUIApi:
         response = self.session.post(url=f'{self.baseurl}/png-info', json=payload)
         return self._to_api_result(response)
 
-    # XXX always returns empty info (2022/11/14)
+    # XXX always returns empty info (2022/12/26)
     def interrogate(self, image):
         payload = {
             "image": b64_img(image),
@@ -335,6 +349,9 @@ class WebUIApi:
     def get_samplers(self):        
         response = self.session.get(url=f'{self.baseurl}/samplers')
         return response.json()
+    def get_upscalers(self):        
+        response = self.session.get(url=f'{self.baseurl}/upscalers')
+        return response.json()
     def get_sd_models(self):        
         response = self.session.get(url=f'{self.baseurl}/sd-models')
         return response.json()
@@ -356,6 +373,29 @@ class WebUIApi:
     def get_artists(self):        
         response = self.session.get(url=f'{self.baseurl}/artists')
         return response.json()
+    def refresh_checkpoints(self):
+        response = self.session.post(url=f'{self.baseurl}/refresh-checkpoints')
+        return response.json()
+    
+    def get_endpoint(self, endpoint, baseurl):
+        if baseurl:
+            return f'{self.baseurl}/{endpoint}'
+        else:
+            from urllib.parse import urlparse, urlunparse
+            parsed_url = urlparse(self.baseurl)
+            basehost = parsed_url.netloc
+            parsed_url2 = (parsed_url[0], basehost, endpoint, '', '', '')
+            return urlunparse(parsed_url2)
+    def custom_get(self, endpoint, baseurl=True):
+        url = self.get_endpoint(endpoint, baseurl)
+        response = self.session.get(url=url)
+        return response.json()
+    def custom_post(self, endpoint, payload={}, baseurl=True):
+        url = self.get_endpoint(endpoint, baseurl)
+        response = self.session.post(url=url, json=payload)
+        return self._to_api_result(response)
+
+
 
 class Upscaler(str, Enum):    
     none = 'None'
