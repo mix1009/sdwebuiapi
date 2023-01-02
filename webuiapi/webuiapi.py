@@ -28,9 +28,13 @@ class WebUIApi:
                  port=7860,
                  baseurl=None,
                  sampler='Euler a',
-                 steps=20):
+                 steps=20,
+                 use_https=False):
         if baseurl is None:
-            baseurl = f'http://{host}:{port}/sdapi/v1'
+            if use_https:
+                baseurl = f'https://{host}:{port}/sdapi/v1'
+            else:
+                baseurl = f'http://{host}:{port}/sdapi/v1'
                 
         self.baseurl = baseurl
         self.default_sampler = sampler
