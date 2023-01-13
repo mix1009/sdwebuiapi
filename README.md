@@ -154,3 +154,18 @@ api.get_artist_categories()
 api.get_artists()
 
 ```
+
+### Utility methods
+```
+# save current model name
+old_model = api.util_get_current_model()
+
+# get list of available models
+models = api.util_get_model_names()
+
+# set model (use exact name)
+api.util_set_model(models[0])
+
+# set model (find closest match)
+api.util_set_model('robodiffusion')
+```

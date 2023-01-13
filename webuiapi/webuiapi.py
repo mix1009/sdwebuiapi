@@ -399,6 +399,36 @@ class WebUIApi:
         response = self.session.post(url=url, json=payload)
         return self._to_api_result(response)
 
+    def util_get_model_names(self):
+        return sorted([x['title'] for x in self.get_sd_models()])
+    def util_set_model(self, name, find_closest=True):
+        name = name.lower()
+        models = self.util_get_model_names()
+        found_model = None
+        if name in models:
+            found_model = name
+        elif find_closest:
+            import difflib
+            def str_simularity(a, b):
+                return difflib.SequenceMatcher(None, a, b).ratio()
+            max_sim = 0.0
+            max_model = models[0]
+            for model in models:
+                sim = str_simularity(name, model)
+                if sim >= max_sim:
+                    max_sim = sim
+                    max_model = model
+            found_model = max_model
+        if found_model:
+            print(f'loading {found_model}')
+            options = {}
+            options['sd_model_checkpoint'] = found_model
+            self.set_options(options)
+            print(f'model changed to {found_model}')
+        else:
+            print('model not found')
+    def util_get_current_model(self):
+        return self.get_options()['sd_model_checkpoint']
 
 
 class Upscaler(str, Enum):    
