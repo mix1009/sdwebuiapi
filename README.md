@@ -203,6 +203,7 @@ result = api.txt2img(
                         ]
                     )
 ```
+![txt2img with X/Y Plot script](https://user-images.githubusercontent.com/34139454/212799015-79c7c05d-9300-4456-b8ca-70afc4098453.png)
 
 ### Configuration APIs
 ```
