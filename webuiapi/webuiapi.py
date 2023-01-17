@@ -11,7 +11,7 @@ class WebUIApiResult:
     images: list
     parameters: dict
     info: dict
-        
+
     @property
     def image(self):
         return self.images[0]
@@ -35,28 +35,28 @@ class WebUIApi:
                 baseurl = f'https://{host}:{port}/sdapi/v1'
             else:
                 baseurl = f'http://{host}:{port}/sdapi/v1'
-                
+
         self.baseurl = baseurl
         self.default_sampler = sampler
         self.default_steps = steps
-        
+
         self.session = requests.Session()
-        
+
     def set_auth(self, username, password):
         self.session.auth = (username, password)
-        
+
     def _to_api_result(self, response):
-        
+
         if response.status_code != 200:
             raise RuntimeError(response.status_code, response.text)
-            
+
         r = response.json()
         images = []
         if 'images' in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r['images']]
         elif 'image' in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(r['image'])))]
-        
+
         info = ''
         if 'info' in r.keys():
             try:
@@ -71,8 +71,8 @@ class WebUIApi:
             parameters = r['parameters']
 
         return WebUIApiResult(images, parameters, info)
-    
-    def txt2img(self, 
+
+    def txt2img(self,
                 enable_hr=False,
                 denoising_strength=0.0,
                 firstphase_width=0,
@@ -99,18 +99,22 @@ class WebUIApi:
                 s_noise=1,
                 override_settings={},
                 override_settings_restore_afterwards=True,
-                sampler_name=None, # use this instead of sampler_index
+                sampler_name=None,  # use this instead of sampler_index
                 sampler_index=None,
                 steps=None,
-               ):
+                script_name=None,
+                script_args=None  # List of arguments for the script "script_name"
+                ):
         if sampler_index is None:
             sampler_index = self.default_sampler
         if sampler_name is None:
             sampler_name = self.default_sampler
         if steps is None:
             steps = self.default_steps
+        if script_args is None:
+            script_args = []
 
-        payload = {    
+        payload = {
             "enable_hr": enable_hr,
             "denoising_strength": denoising_strength,
             "firstphase_width": firstphase_width,
@@ -140,14 +144,15 @@ class WebUIApi:
             "override_settings_restore_afterwards": override_settings_restore_afterwards,
             "sampler_name": sampler_name,
             "sampler_index": sampler_index,
+            "script_name": script_name,
+            "script_args": script_args
         }
         response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
         return self._to_api_result(response)
 
-
     def img2img(self,
-                images=[], # list of PIL Image
-                mask_image=None, # PIL Image mask
+                images=[],  # list of PIL Image
+                mask_image=None,  # PIL Image mask
                 resize_mode=0,
                 denoising_strength=0.75,
                 mask_blur=4,
@@ -180,15 +185,19 @@ class WebUIApi:
                 override_settings_restore_afterwards=True,
                 include_init_images=False,
                 steps=None,
-                sampler_name=None, # use this instead of sampler_index
+                sampler_name=None,  # use this instead of sampler_index
                 sampler_index=None,
-        ):
+                script_name=None,
+                script_args=None  # List of arguments for the script "script_name"
+                ):
         if sampler_name is None:
             sampler_name = self.default_sampler
         if sampler_index is None:
             sampler_index = self.default_sampler
         if steps is None:
             steps = self.default_steps
+        if script_args is None:
+            script_args = []
 
         payload = {
             "init_images": [b64_img(x) for x in images],
@@ -226,15 +235,17 @@ class WebUIApi:
             "sampler_name": sampler_name,
             "sampler_index": sampler_index,
             "include_init_images": include_init_images,
+            "script_name": script_name,
+            "script_args": script_args
         }
         if mask_image is not None:
-            payload['mask']= b64_img(mask_image)
-            
+            payload['mask'] = b64_img(mask_image)
+
         response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
         return self._to_api_result(response)
 
     def extra_single_image(self,
-                           image, # PIL Image
+                           image,  # PIL Image
                            resize_mode=0,
                            show_extras_results=True,
                            gfpgan_visibility=0,
@@ -248,7 +259,7 @@ class WebUIApi:
                            upscaler_2="None",
                            extras_upscaler_2_visibility=0,
                            upscale_first=False,
-                          ):
+                           ):
         payload = {
             "resize_mode": resize_mode,
             "show_extras_results": show_extras_results,
@@ -265,13 +276,13 @@ class WebUIApi:
             "upscale_first": upscale_first,
             "image": b64_img(image),
         }
-        
+
         response = self.session.post(url=f'{self.baseurl}/extra-single-image', json=payload)
         return self._to_api_result(response)
 
     def extra_batch_images(self,
-                           images, # list of PIL images
-                           name_list=None, # list of image names
+                           images,  # list of PIL images
+                           name_list=None,  # list of image names
                            resize_mode=0,
                            show_extras_results=True,
                            gfpgan_visibility=0,
@@ -285,21 +296,21 @@ class WebUIApi:
                            upscaler_2="None",
                            extras_upscaler_2_visibility=0,
                            upscale_first=False,
-                          ):
+                           ):
         if name_list is not None:
             if len(name_list) != len(images):
                 raise RuntimeError('len(images) != len(name_list)')
         else:
-            name_list = [f'image{i+1:05}' for i in range(len(images))]
+            name_list = [f'image{i + 1:05}' for i in range(len(images))]
         images = [b64_img(x) for x in images]
-        
+
         image_list = []
         for name, image in zip(name_list, images):
             image_list.append({
                 "data": image,
                 "name": name
             })
-                
+
         payload = {
             "resize_mode": resize_mode,
             "show_extras_results": show_extras_results,
@@ -316,16 +327,16 @@ class WebUIApi:
             "upscale_first": upscale_first,
             "imageList": image_list,
         }
-        
+
         response = self.session.post(url=f'{self.baseurl}/extra-batch-images', json=payload)
         return self._to_api_result(response)
- 
+
     # XXX 500 error (2022/12/26)
     def png_info(self, image):
         payload = {
             "image": b64_img(image),
         }
-        
+
         response = self.session.post(url=f'{self.baseurl}/png-info', json=payload)
         return self._to_api_result(response)
 
@@ -334,20 +345,20 @@ class WebUIApi:
         payload = {
             "image": b64_img(image),
         }
-        
+
         response = self.session.post(url=f'{self.baseurl}/interrogate', json=payload)
         return self._to_api_result(response)
 
-    def get_options(self):        
+    def get_options(self):
         response = self.session.get(url=f'{self.baseurl}/options')
         return response.json()
 
     # working (2022/11/21)
-    def set_options(self, options):        
+    def set_options(self, options):
         response = self.session.post(url=f'{self.baseurl}/options', json=options)
         return response.json()
 
-    def get_cmd_flags(self):        
+    def get_cmd_flags(self):
         response = self.session.get(url=f'{self.baseurl}/cmd-flags')
         return response.json()
     def get_samplers(self):        
@@ -380,7 +391,7 @@ class WebUIApi:
     def refresh_checkpoints(self):
         response = self.session.post(url=f'{self.baseurl}/refresh-checkpoints')
         return response.json()
-    
+
     def get_endpoint(self, endpoint, baseurl):
         if baseurl:
             return f'{self.baseurl}/{endpoint}'
@@ -431,7 +442,7 @@ class WebUIApi:
         return self.get_options()['sd_model_checkpoint']
 
 
-class Upscaler(str, Enum):    
+class Upscaler(str, Enum):
     none = 'None'
     Lanczos = 'Lanczos'
     Nearest = 'Nearest'

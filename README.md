@@ -126,6 +126,83 @@ result4.images[1]
 ```
 ![extra_batch_images_2](https://user-images.githubusercontent.com/1288793/200459542-aa8547a0-f6db-436b-bec1-031a93a7b1d4.jpg)
 
+### Scripts support
+Scripts from AUTOMATIC1111's Web UI are supported, but there aren't official models that define a script's interface.
+
+To find out the list of arguments that are accepted by a particular script look up the associated python file from
+AUTOMATIC1111's repo `scripts/[script_name].py`. Search for its `run(p, **args)` function and the arguments that come
+after 'p' is the list of accepted arguments
+
+#### Example for X/Y Plot script:
+```
+(scripts/xy_grid.py file from AUTOMATIC1111's repo)
+
+def run(self, p, x_type, x_values, y_type, y_values, draw_legend, include_lone_images, no_fixed_seeds):
+    ...
+```
+List of accepted arguments:
+* _x_type_: Index of the axis for X axis. Indexes start from [0: Nothing]
+* _x_values_: String of comma-separated values for the X axis 
+* _y_type_: Index of the axis type for Y axis. As the X axis, indexes start from [0: Nothing]
+* _y_values_: String of comma-separated values for the Y axis
+* _draw_legend_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
+* _include_lone_images_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
+* _no_fixed_seeds_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
+```
+# Available Axis options
+XYPlotAvailableScripts = [
+    "Nothing",
+    "Seed",
+    "Var. seed",
+    "Var. strength",
+    "Steps",
+    "CFG Scale",
+    "Prompt S/R",
+    "Prompt order",
+    "Sampler",
+    "Checkpoint Name",
+    "Hypernetwork",
+    "Hypernet str.",
+    "Sigma Churn",
+    "Sigma min",
+    "Sigma max",
+    "Sigma noise",
+    "Eta",
+    "Clip skip",
+    "Denoising",
+    "Hires upscaler",
+    "Cond. Image Mask Weight",
+    "VAE",
+    "Styles"
+]
+
+# Example call
+XAxisType = "Steps"
+XAxisValues = "8,16,32,64"
+YAxisType = "Sampler"
+YAxisValues = "k_euler_a, k_euler, k_lms, plms, k_heun, ddim, k_dpm_2, k_dpm_2_a"
+drawLegend = "True"
+includeSeparateImages = "False"
+keepRandomSeed = "False"
+
+result = api.txt2img(
+                    prompt="cute squirrel",
+                    negative_prompt="ugly, out of frame",
+                    seed=1003,
+                    styles=["anime"],
+                    cfg_scale=7,
+                    script_name="X/Y Plot",
+                    script_args=[
+                        XYPlotAvailableScripts.index(XAxisType),
+                        XAxisValues,
+                        XYPlotAvailableScripts.index(YAxisType),
+                        YAxisValues,
+                        drawLegend,
+                        includeSeparateImages,
+                        keepRandomSeed
+                        ]
+                    )
+```
 
 ### Configuration APIs
 ```
