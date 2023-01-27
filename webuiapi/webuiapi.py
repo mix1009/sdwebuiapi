@@ -74,6 +74,11 @@ class WebUIApi:
 
     def txt2img(self,
                 enable_hr=False,
+                hr_scale=2,
+                hr_upscaler='latent',
+                hr_second_pass_steps=0,
+                hr_resize_x=0,
+                hr_resize_y=0,
                 denoising_strength=0.0,
                 firstphase_width=0,
                 firstphase_height=0,
@@ -113,9 +118,13 @@ class WebUIApi:
             steps = self.default_steps
         if script_args is None:
             script_args = []
-
         payload = {
             "enable_hr": enable_hr,
+            "hr_scale" : hr_scale,
+            "hr_upscaler" : hr_upscaler,
+            "hr_second_pass_steps" : hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y,
             "denoising_strength": denoising_strength,
             "firstphase_width": firstphase_width,
             "firstphase_height": firstphase_height,
