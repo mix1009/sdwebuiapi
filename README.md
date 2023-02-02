@@ -238,7 +238,7 @@ api.get_realesrgan_models()
 api.get_prompt_styles()
 api.get_artist_categories()
 api.get_artists()
-
+api.get_progress()
 ```
 
 ### Utility methods
@@ -254,4 +254,24 @@ api.util_set_model(models[0])
 
 # set model (find closest match)
 api.util_set_model('robodiffusion')
+
+# wait for job complete
+api.util_wait_for_ready()
+
+```
+
+### Extension support
+```
+# https://github.com/mix1009/model-keyword
+mki = webuiapi.ModelKeywordInterface(api)
+mki.get_keywords()
+```
+ModelKeywordResult(keywords=['nousr robot'], model='robo-diffusion-v1.ckpt', oldhash='41fef4bd', match_source='model-keyword.txt')
+
+
+```
+# https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
+ip2p = webuiapi.InstructPix2PixInterface(api)
+r = ip2p.img2img(prompt='sunset', images=[pil_img])
+r.image
 ```

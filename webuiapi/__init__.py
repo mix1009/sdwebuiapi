@@ -1,6 +1,6 @@
-from .webuiapi import WebUIApi, WebUIApiResult, Upscaler, HiResUpscaler
+from .webuiapi import WebUIApi, WebUIApiResult, Upscaler, HiResUpscaler, b64_img, ModelKeywordResult, ModelKeywordInterface, InstructPix2PixInterface
 
-__version__ = "0.2.1"
+__version__ = "0.3.0"
 
 __all__ = [
     "__version__",
@@ -8,5 +8,9 @@ __all__ = [
     "WebUIApiResult",
     "Upscaler",
     "HiResUpscaler",
+    "b64_img",
+    "ModelKeywordResult",
+    "ModelKeywordInterface",
+    "InstructPix2PixInterface",   
 ]
 

@@ -390,10 +390,12 @@ class WebUIApi:
     def get_options(self):
         response = self.session.get(url=f'{self.baseurl}/options')
         return response.json()
-
-    # working (2022/11/21)
     def set_options(self, options):
         response = self.session.post(url=f'{self.baseurl}/options', json=options)
+        return response.json()
+
+    def get_progress(self):
+        response = self.session.get(url=f'{self.baseurl}/progress')
         return response.json()
 
     def get_cmd_flags(self):
@@ -439,11 +441,11 @@ class WebUIApi:
             basehost = parsed_url.netloc
             parsed_url2 = (parsed_url[0], basehost, endpoint, '', '', '')
             return urlunparse(parsed_url2)
-    def custom_get(self, endpoint, baseurl=True):
+    def custom_get(self, endpoint, baseurl=False):
         url = self.get_endpoint(endpoint, baseurl)
         response = self.session.get(url=url)
         return response.json()
-    def custom_post(self, endpoint, payload={}, baseurl=True):
+    def custom_post(self, endpoint, payload={}, baseurl=False):
         url = self.get_endpoint(endpoint, baseurl)
         response = self.session.post(url=url, json=payload)
         return self._to_api_result(response)
@@ -476,7 +478,77 @@ class WebUIApi:
             print(f'model changed to {found_model}')
         else:
             print('model not found')
+
     def util_get_current_model(self):
         return self.get_options()['sd_model_checkpoint']
 
+    def util_wait_for_ready(self, check_interval=5.0):
+        import time
+        while True:
+            result =  self.get_progress()
+            progress = result['progress']
+            job_count = result['state']['job_count']
+            if progress == 0.0 and job_count == 0:
+                break
+            else:
+                print(f'[WAIT]: progress = {progress:.4f}, job_count = {job_count}')
+                time.sleep(check_interval)
+
+
+
+## Interface for extensions
+
+# https://github.com/mix1009/model-keyword
+@dataclass
+class ModelKeywordResult:
+    keywords: list
+    model: str
+    oldhash: str
+    match_source: str
+    
+class ModelKeywordInterface:
+    def __init__(self, webuiapi):
+        self.api = webuiapi
+    def get_keywords(self):
+        result = self.api.custom_get('model_keyword/get_keywords')
+        keywords = result['keywords']
+        model = result['model']
+        oldhash = result['hash']
+        match_source = result['match_source']
+        return ModelKeywordResult(keywords, model, oldhash, match_source)
+
+# https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
+class InstructPix2PixInterface:
+    def __init__(self, webuiapi):
+        self.api = webuiapi
+    def img2img(self, 
+        images=[],
+        prompt: str = '',
+        negative_prompt: str = '',
+        output_batches: int = 1,
+        sampler: str = 'Euler a',
+        steps: int = 20,
+        seed: int = 0,
+        randomize_seed: bool = True,
+        text_cfg: float = 7.5,
+        image_cfg: float = 1.5,
+        randomize_cfg: bool = False,
+        output_image_width: int = 512
+        ):
+        init_images = [b64_img(x) for x in images]
+        payload = {
+            "init_images": init_images,
+            "prompt": prompt,
+            "negative_prompt": negative_prompt,
+            "output_batches": output_batches,
+            "sampler": sampler,
+            "steps": steps,
+            "seed": seed,
+            "randomize_seed": randomize_seed,
+            "text_cfg": text_cfg,
+            "image_cfg": image_cfg,
+            "randomize_cfg": randomize_cfg,
+            "output_image_width": output_image_width
+        }
+        return self.api.custom_post('instruct-pix2pix/img2img', payload=payload)
 
