@@ -272,6 +272,6 @@ ModelKeywordResult(keywords=['nousr robot'], model='robo-diffusion-v1.ckpt', old
 ```
 # https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
 ip2p = webuiapi.InstructPix2PixInterface(api)
-r = ip2p.img2img(prompt='sunset', images=[pil_img])
+r = ip2p.img2img(prompt='sunset', images=[pil_img], text_cfg=7.5, image_cfg=1.5)
 r.image
 ```
