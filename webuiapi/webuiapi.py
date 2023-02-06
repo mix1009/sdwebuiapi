@@ -455,7 +455,8 @@ class WebUIApi:
     def util_get_model_names(self):
         return sorted([x['title'] for x in self.get_sd_models()])
     def util_set_model(self, name, find_closest=True):
-        name = name.lower()
+        if find_closest:
+            name = name.lower()
         models = self.util_get_model_names()
         found_model = None
         if name in models:
