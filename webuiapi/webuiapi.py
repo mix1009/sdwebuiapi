@@ -16,7 +16,7 @@ class Upscaler(str, Enum):
     R_ESRGAN_General_4xV3 = 'R-ESRGAN General 4xV3'
     ScuNET_GAN = 'ScuNET GAN'
     ScuNET_PSNR = 'ScuNET PSNR'
-    SwinIR_4x = 'SwinIR 4x'
+    SwinIR_4x = 'SwinIR_4x'
 
 class HiResUpscaler(str, Enum):
     none = 'None'
