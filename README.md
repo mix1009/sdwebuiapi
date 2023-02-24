@@ -260,7 +260,7 @@ api.util_wait_for_ready()
 
 ```
 
-### Extension support
+### Extension support - Model-Keyword
 ```
 # https://github.com/mix1009/model-keyword
 mki = webuiapi.ModelKeywordInterface(api)
@@ -269,9 +269,58 @@ mki.get_keywords()
 ModelKeywordResult(keywords=['nousr robot'], model='robo-diffusion-v1.ckpt', oldhash='41fef4bd', match_source='model-keyword.txt')
 
 
+### Extension support - Instruct-Pix2Pix
 ```
 # https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
 ip2p = webuiapi.InstructPix2PixInterface(api)
 r = ip2p.img2img(prompt='sunset', images=[pil_img], text_cfg=7.5, image_cfg=1.5)
 r.image
 ```
+
+### Extension support - ControlNet
+```
+# https://github.com/Mikubill/sd-webui-controlnet
+cn = webuiapi.ControlNetInterface(api)
+cn.model_list()
+```
+<pre>
+['control_canny-fp16 [e3fe7712]',
+ 'control_depth-fp16 [400750f6]',
+ 'control_hed-fp16 [13fee50b]',
+ 'control_mlsd-fp16 [e3705cfa]',
+ 'control_normal-fp16 [63f96f7c]',
+ 'control_openpose-fp16 [9ca67cc5]',
+ 'control_scribble-fp16 [c508311e]',
+ 'control_seg-fp16 [b9c1cc12]']
+ </pre>
+
+```
+r = api.txt2img(prompt="vibrant city street with cars")
+img = r.image
+img
+```
+![cn1](https://user-images.githubusercontent.com/1288793/221105626-5f7b01fa-670d-4726-8268-f41361ecbb72.png)
+
+
+```
+r2 = cn.img2img(prompt="city street",
+            init_images=[img], 
+            controlnet_input_image=[img], 
+            controlnet_weight = 1,
+            controlnet_guidance = 1,
+            denoising_strength=0.7,
+            sampler_index="Euler a",
+            cfg_scale=7,
+            controlnet_module='segmentation',
+            controlnet_model='control_seg-fp16 [b9c1cc12]',
+           )
+r2.image
+```
+![cn2](https://user-images.githubusercontent.com/1288793/221105591-79f60974-7438-4e8f-8afe-dd91d3c6e70d.png)
+
+
+```
+r2.images[1]
+```
+![cn3](https://user-images.githubusercontent.com/1288793/221105583-c12c47c9-0856-47bf-8389-6689d9a71bd6.png)
+
