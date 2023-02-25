@@ -206,7 +206,7 @@ class WebUIApi:
                 inpaint_full_res=True,
                 inpaint_full_res_padding=0,
                 inpainting_mask_invert=0,
-                initial_noise_multiplier=0,
+                initial_noise_multiplier=1,
                 prompt="",
                 styles=[],
                 seed=-1,
