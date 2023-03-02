@@ -141,11 +141,11 @@ To find out the list of arguments that are accepted by a particular script look 
 AUTOMATIC1111's repo `scripts/[script_name].py`. Search for its `run(p, **args)` function and the arguments that come
 after 'p' is the list of accepted arguments
 
-#### Example for X/Y Plot script:
+#### Example for X/Y/Z Plot script:
 ```
-(scripts/xy_grid.py file from AUTOMATIC1111's repo)
+(scripts/xyz_grid.py file from AUTOMATIC1111's repo)
 
-def run(self, p, x_type, x_values, y_type, y_values, draw_legend, include_lone_images, no_fixed_seeds):
+    def run(self, p, x_type, x_values, y_type, y_values, z_type, z_values, draw_legend, include_lone_images, include_sub_grids, no_fixed_seeds, margin_size):
     ...
 ```
 List of accepted arguments:
@@ -153,24 +153,27 @@ List of accepted arguments:
 * _x_values_: String of comma-separated values for the X axis 
 * _y_type_: Index of the axis type for Y axis. As the X axis, indexes start from [0: Nothing]
 * _y_values_: String of comma-separated values for the Y axis
+* _z_type_: Index of the axis type for Z axis. As the X axis, indexes start from [0: Nothing]
+* _z_values_: String of comma-separated values for the Z axis
 * _draw_legend_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
 * _include_lone_images_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
+* _include_sub_grids_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
 * _no_fixed_seeds_: "True" or "False". IMPORTANT: It needs to be a string and not a Boolean value
+* margin_size: int value
 ```
-# Available Axis options
-XYPlotAvailableScripts = [
+# Available Axis options (Different for txt2img and img2img!)
+XYZPlotAvailableTxt2ImgScripts = [
     "Nothing",
     "Seed",
     "Var. seed",
     "Var. strength",
     "Steps",
+    "Hires steps",
     "CFG Scale",
     "Prompt S/R",
     "Prompt order",
     "Sampler",
-    "Checkpoint Name",
-    "Hypernetwork",
-    "Hypernet str.",
+    "Checkpoint name",
     "Sigma Churn",
     "Sigma min",
     "Sigma max",
@@ -179,39 +182,72 @@ XYPlotAvailableScripts = [
     "Clip skip",
     "Denoising",
     "Hires upscaler",
+    "VAE",
+    "Styles",
+]
+
+XYZPlotAvailableImg2ImgScripts = [
+    "Nothing",
+    "Seed",
+    "Var. seed",
+    "Var. strength",
+    "Steps",
+    "CFG Scale",
+    "Image CFG Scale",
+    "Prompt S/R",
+    "Prompt order",
+    "Sampler",
+    "Checkpoint name",
+    "Sigma Churn",
+    "Sigma min",
+    "Sigma max",
+    "Sigma noise",
+    "Eta",
+    "Clip skip",
+    "Denoising",
     "Cond. Image Mask Weight",
     "VAE",
-    "Styles"
+    "Styles",
 ]
 
 # Example call
 XAxisType = "Steps"
-XAxisValues = "8,16,32,64"
+XAxisValues = "20,30" 
 YAxisType = "Sampler"
-YAxisValues = "k_euler_a, k_euler, k_lms, plms, k_heun, ddim, k_dpm_2, k_dpm_2_a"
+YAxisValues = "Euler a, LMS"
+ZAxisType = "Nothing"
+ZAxisValues = ""
 drawLegend = "True"
-includeSeparateImages = "False"
-keepRandomSeed = "False"
+includeLoneImages = "False"
+includeSubGrids = "False"
+noFixedSeeds = "False"
+marginSize = 0
+
+
+# x_type, x_values, y_type, y_values, z_type, z_values, draw_legend, include_lone_images, include_sub_grids, no_fixed_seeds, margin_size
 
 result = api.txt2img(
-                    prompt="cute squirrel",
-                    negative_prompt="ugly, out of frame",
+                    prompt="cute girl with short brown hair in black t-shirt in animation style",
                     seed=1003,
-                    styles=["anime"],
-                    cfg_scale=7,
-                    script_name="X/Y Plot",
+                    script_name="X/Y/Z Plot",
                     script_args=[
-                        XYPlotAvailableScripts.index(XAxisType),
+                        XYZPlotAvailableTxt2ImgScripts.index(XAxisType),
                         XAxisValues,
-                        XYPlotAvailableScripts.index(YAxisType),
+                        XYZPlotAvailableTxt2ImgScripts.index(YAxisType),
                         YAxisValues,
+                        XYZPlotAvailableTxt2ImgScripts.index(ZAxisType),
+                        ZAxisValues,
                         drawLegend,
-                        includeSeparateImages,
-                        keepRandomSeed
-                        ]
+                        includeLoneImages,
+                        includeSubGrids,
+                        noFixedSeeds,
+                        marginSize,                        ]
                     )
+
+result.image
 ```
-![txt2img with X/Y Plot script](https://user-images.githubusercontent.com/34139454/212799015-79c7c05d-9300-4456-b8ca-70afc4098453.png)
+![txt2img_grid_xyz](https://user-images.githubusercontent.com/1288793/222345625-dc2e4090-6786-4a53-8619-700dc2f12412.jpg)
+
 
 ### Configuration APIs
 ```
