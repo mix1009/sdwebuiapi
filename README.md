@@ -294,33 +294,54 @@ cn.model_list()
  'control_seg-fp16 [b9c1cc12]']
  </pre>
 
+**Use of ControlNetInterface txt2img/img2img is deprecated.** Please use the txt2img and img2img api with controlnet_units parameter.
+
+
 ```
-r = api.txt2img(prompt="vibrant city street with cars")
+# normal txt2img
+r = api.txt2img(prompt="photo of a beautiful girl with blonde hair", height=512, seed=100)
 img = r.image
 img
 ```
-![cn1](https://user-images.githubusercontent.com/1288793/221105626-5f7b01fa-670d-4726-8268-f41361ecbb72.png)
+![cn1](https://user-images.githubusercontent.com/1288793/222315754-43c6dc8c-2a62-4a31-b51a-f68523118e0d.png)
+
+```
+# txt2img with ControlNet
+unit1 = webuiapi.ControlNetUnit(input_image=img, module='canny', model='control_canny-fp16 [e3fe7712]')
+
+r = api.txt2img(prompt="photo of a beautiful girl", controlnet_units=[unit1])
+r.image
+```
+
+![cn2](https://user-images.githubusercontent.com/1288793/222315791-c6c480eb-2987-4044-b673-5f2cb6135f87.png)
 
 
 ```
-r2 = cn.img2img(prompt="city street",
-            init_images=[img], 
-            controlnet_input_image=[img], 
-            controlnet_weight = 1,
-            controlnet_guidance = 1,
-            denoising_strength=0.7,
-            sampler_index="Euler a",
+# img2img with multiple ControlNets
+unit1 = webuiapi.ControlNetUnit(input_image=img, module='canny', model='control_canny-fp16 [e3fe7712]')
+unit2 = webuiapi.ControlNetUnit(input_image=img, module='depth', model='control_depth-fp16 [400750f6]', weight=0.5)
+
+r2 = api.img2img(prompt="girl",
+            images=[img], 
+            width=512,
+            height=512,
+            controlnet_units=[unit1, unit2],
+            sampler_name="Euler a",
             cfg_scale=7,
-            controlnet_module='segmentation',
-            controlnet_model='control_seg-fp16 [b9c1cc12]',
            )
 r2.image
 ```
-![cn2](https://user-images.githubusercontent.com/1288793/221105591-79f60974-7438-4e8f-8afe-dd91d3c6e70d.png)
-
+![cn3](https://user-images.githubusercontent.com/1288793/222315816-1155b0c2-570d-4455-a68e-294fc7061b0a.png)
 
 ```
 r2.images[1]
 ```
-![cn3](https://user-images.githubusercontent.com/1288793/221105583-c12c47c9-0856-47bf-8389-6689d9a71bd6.png)
+![cn4](https://user-images.githubusercontent.com/1288793/222315836-9a26afec-c407-426b-9a08-b2cef2a32ab1.png)
+
+```
+r2.images[2]
+```
+![cn5](https://user-images.githubusercontent.com/1288793/222315859-e6b6286e-854d-40c1-a516-5a08c827c49a.png)
+
+
 
