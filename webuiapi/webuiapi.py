@@ -45,6 +45,57 @@ class WebUIApiResult:
     @property
     def image(self):
         return self.images[0]
+    
+class ControlNetUnit:
+    def __init__(self,
+        input_image: Image = None,
+        mask: Image = None,
+        module: str = "none",
+        model: str = "None",
+        weight: float = 1.0,
+        resize_mode: str = "Scale to Fit (Inner Fit)",
+        lowvram: bool = False,
+        processor_res: int = 64,
+        threshold_a: float = 64,
+        threshold_b: float = 64,
+        guidance: float = 1.0,
+        guidance_start: float = 0.0,
+        guidance_end: float = 1.0,
+        guessmode: bool = False):
+        
+        self.input_image = input_image
+        self.mask = mask
+        self.module = module
+        self.model = model
+        self.weight = weight
+        self.resize_mode = resize_mode
+        self.lowvram = lowvram
+        self.processor_res = processor_res
+        self.threshold_a = threshold_a
+        self.threshold_b = threshold_b
+        self.guidance = guidance
+        self.guidance_start = guidance_start
+        self.guidance_end = guidance_end
+        self.guessmode = guessmode
+
+    def to_dict(self):
+        return {
+            "input_image": raw_b64_img(self.input_image) if self.input_image else "",
+            "mask": raw_b64_img(self.mask) if self.mask else "",
+            "module": self.module,
+            "model": self.model,
+            "weight": self.weight,
+            "resize_mode": self.resize_mode,
+            "lowvram": self.lowvram,
+            "processor_res": self.processor_res,
+            "threshold_a": self.threshold_a,
+            "threshold_b": self.threshold_b,
+            "guidance": self.guidance,
+            "guidance_start": self.guidance_start,
+            "guidance_end": self.guidance_end,
+            "guessmode": self.guessmode,
+        }
+
 
 def b64_img(image: Image):
     buffered = io.BytesIO()
@@ -111,14 +162,14 @@ class WebUIApi:
 
     def txt2img(self,
                 enable_hr=False,
+                denoising_strength=0.0,
+                firstphase_width=0,
+                firstphase_height=0,
                 hr_scale=2,
                 hr_upscaler=HiResUpscaler.Latent,
                 hr_second_pass_steps=0,
                 hr_resize_x=0,
                 hr_resize_y=0,
-                denoising_strength=0.0,
-                firstphase_width=0,
-                firstphase_height=0,
                 prompt="",
                 styles=[],
                 seed=-1,
@@ -126,8 +177,10 @@ class WebUIApi:
                 subseed_strength=0.0,
                 seed_resize_from_h=-1,
                 seed_resize_from_w=-1,
+                sampler_name=None,  # use this instead of sampler_index
                 batch_size=1,
                 n_iter=1,
+                steps=None,
                 cfg_scale=7.0,
                 width=512,
                 height=512,
@@ -141,11 +194,10 @@ class WebUIApi:
                 s_noise=1,
                 override_settings={},
                 override_settings_restore_afterwards=True,
-                sampler_name=None,  # use this instead of sampler_index
-                sampler_index=None,
-                steps=None,
+                script_args=None,  # List of arguments for the script "script_name"
                 script_name=None,
-                script_args=None  # List of arguments for the script "script_name"
+                controlnet_units: List[ControlNetUnit] = [],
+                sampler_index=None, # deprecated: use sampler_name
                 ):
         if sampler_index is None:
             sampler_index = self.default_sampler
@@ -193,14 +245,19 @@ class WebUIApi:
             "script_name": script_name,
             "script_args": script_args
         }
-        response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
-        return self._to_api_result(response)
+        if controlnet_units and len(controlnet_units)>0:
+            payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
+            return self.custom_post('controlnet/txt2img', payload=payload)
+        else:
+            response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
+            return self._to_api_result(response)
 
     def img2img(self,
                 images=[],  # list of PIL Image
-                mask_image=None,  # PIL Image mask
                 resize_mode=0,
                 denoising_strength=0.75,
+                image_cfg_scale=1.5,
+                mask_image=None,  # PIL Image mask
                 mask_blur=4,
                 inpainting_fill=0,
                 inpaint_full_res=True,
@@ -214,10 +271,11 @@ class WebUIApi:
                 subseed_strength=0,
                 seed_resize_from_h=-1,
                 seed_resize_from_w=-1,
+                sampler_name=None,  # use this instead of sampler_index
                 batch_size=1,
                 n_iter=1,
+                steps=None,
                 cfg_scale=7.0,
-                image_cfg_scale=1.5,
                 width=512,
                 height=512,
                 restore_faces=False,
@@ -230,12 +288,11 @@ class WebUIApi:
                 s_noise=1,
                 override_settings={},
                 override_settings_restore_afterwards=True,
+                script_args=None,  # List of arguments for the script "script_name"
+                sampler_index=None,  # deprecated: use sampler_name
                 include_init_images=False,
-                steps=None,
-                sampler_name=None,  # use this instead of sampler_index
-                sampler_index=None,
                 script_name=None,
-                script_args=None  # List of arguments for the script "script_name"
+                controlnet_units: List[ControlNetUnit] = [],
                 ):
         if sampler_name is None:
             sampler_name = self.default_sampler
@@ -289,8 +346,12 @@ class WebUIApi:
         if mask_image is not None:
             payload['mask'] = b64_img(mask_image)
 
-        response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
-        return self._to_api_result(response)
+        if controlnet_units and len(controlnet_units)>0:
+            payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
+            return self.custom_post('controlnet/img2img', payload=payload)
+        else:
+            response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
+            return self._to_api_result(response)
 
     def extra_single_image(self,
                            image,  # PIL Image
@@ -566,8 +627,12 @@ class InstructPix2PixInterface:
 
 # https://github.com/Mikubill/sd-webui-controlnet
 class ControlNetInterface:
-    def __init__(self, webuiapi):
+    def __init__(self, webuiapi, show_deprecation_warning=True):
         self.api = webuiapi
+        self.show_deprecation_warning = show_deprecation_warning
+        
+    def print_deprecation_warning(self):
+        print('ControlNetInterface txt2img/img2img is deprecated. Please use normal txt2img/img2img with controlnet_units param')
         
     def txt2img(self,
         prompt: str = "",
@@ -601,6 +666,9 @@ class ControlNetInterface:
         restore_faces: bool = False,
         override_settings: Dict[str, Any] = None, 
         override_settings_restore_afterwards: bool = True):
+        
+        if self.show_deprecation_warning:
+            self.print_deprecation_warning()
         
         controlnet_input_image_b64 = [raw_b64_img(x) for x in controlnet_input_image]
         controlnet_mask_b64 = [raw_b64_img(x) for x in controlnet_mask]
@@ -679,6 +747,9 @@ class ControlNetInterface:
         override_settings: Dict[str, Any] = None, 
         override_settings_restore_afterwards: bool = True):
         
+        if self.show_deprecation_warning:
+            self.print_deprecation_warning()
+
         init_images_b64 = [raw_b64_img(x) for x in init_images]
         controlnet_input_image_b64 = [raw_b64_img(x) for x in controlnet_input_image]
         controlnet_mask_b64 = [raw_b64_img(x) for x in controlnet_mask]
