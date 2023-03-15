@@ -162,7 +162,7 @@ class WebUIApi:
 
     def txt2img(self,
                 enable_hr=False,
-                denoising_strength=0.0,
+                denoising_strength=0.7,
                 firstphase_width=0,
                 firstphase_height=0,
                 hr_scale=2,
@@ -175,8 +175,8 @@ class WebUIApi:
                 seed=-1,
                 subseed=-1,
                 subseed_strength=0.0,
-                seed_resize_from_h=-1,
-                seed_resize_from_w=-1,
+                seed_resize_from_h=0,
+                seed_resize_from_w=0,
                 sampler_name=None,  # use this instead of sampler_index
                 batch_size=1,
                 n_iter=1,
@@ -279,8 +279,8 @@ class WebUIApi:
                 seed=-1,
                 subseed=-1,
                 subseed_strength=0,
-                seed_resize_from_h=-1,
-                seed_resize_from_w=-1,
+                seed_resize_from_h=0,
+                seed_resize_from_w=0,
                 sampler_name=None,  # use this instead of sampler_index
                 batch_size=1,
                 n_iter=1,
