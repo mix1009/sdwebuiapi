@@ -186,6 +186,8 @@ class WebUIApi:
                 height=512,
                 restore_faces=False,
                 tiling=False,
+                do_not_save_samples=False,
+                do_not_save_grid=False,
                 negative_prompt="",
                 eta=1.0,
                 s_churn=0,
@@ -196,6 +198,9 @@ class WebUIApi:
                 override_settings_restore_afterwards=True,
                 script_args=None,  # List of arguments for the script "script_name"
                 script_name=None,
+                send_images=True,
+                save_images=False,
+                alwayson_scripts={},
                 controlnet_units: List[ControlNetUnit] = [],
                 sampler_index=None, # deprecated: use sampler_name
                 ):
@@ -232,6 +237,8 @@ class WebUIApi:
             "height": height,
             "restore_faces": restore_faces,
             "tiling": tiling,
+            "do_not_save_samples": do_not_save_samples,
+            "do_not_save_grid": do_not_save_grid,
             "negative_prompt": negative_prompt,
             "eta": eta,
             "s_churn": s_churn,
@@ -243,7 +250,10 @@ class WebUIApi:
             "sampler_name": sampler_name,
             "sampler_index": sampler_index,
             "script_name": script_name,
-            "script_args": script_args
+            "script_args": script_args,
+            "send_images": send_images,
+            "save_images": save_images,
+            "alwayson_scripts": alwayson_scripts,
         }
         if controlnet_units and len(controlnet_units)>0:
             payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
@@ -280,6 +290,8 @@ class WebUIApi:
                 height=512,
                 restore_faces=False,
                 tiling=False,
+                do_not_save_samples=False,
+                do_not_save_grid=False,
                 negative_prompt="",
                 eta=1.0,
                 s_churn=0,
@@ -292,6 +304,9 @@ class WebUIApi:
                 sampler_index=None,  # deprecated: use sampler_name
                 include_init_images=False,
                 script_name=None,
+                send_images=True,
+                save_images=False,
+                alwayson_scripts={},
                 controlnet_units: List[ControlNetUnit] = [],
                 ):
         if sampler_name is None:
@@ -329,6 +344,8 @@ class WebUIApi:
             "height": height,
             "restore_faces": restore_faces,
             "tiling": tiling,
+            "do_not_save_samples": do_not_save_samples,
+            "do_not_save_grid": do_not_save_grid,
             "negative_prompt": negative_prompt,
             "eta": eta,
             "s_churn": s_churn,
@@ -341,7 +358,10 @@ class WebUIApi:
             "sampler_index": sampler_index,
             "include_init_images": include_init_images,
             "script_name": script_name,
-            "script_args": script_args
+            "script_args": script_args,
+            "send_images": send_images,
+            "save_images": save_images,
+            "alwayson_scripts": alwayson_scripts,
         }
         if mask_image is not None:
             payload['mask'] = b64_img(mask_image)

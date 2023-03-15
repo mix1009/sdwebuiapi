@@ -11,7 +11,7 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="webuiapi",
-    version="0.5.0",
+    version="0.6.0",
     description="Python API client for AUTOMATIC1111/stable-diffusion-webui",
     url="https://github.com/mix1009/sdwebuiapi",
     author="ChunKoo Park",
