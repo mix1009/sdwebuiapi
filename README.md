@@ -296,6 +296,17 @@ api.util_wait_for_ready()
 
 ```
 
+### LORA and alwayson_scripts example
+
+```
+r = api.txt2img(prompt='photo of a cute girl with green hair <lora:Moxin_10:0.6> shuimobysim __juice__',
+                seed=1000,
+                save_images=True,
+                alwayson_scripts={"Simple wildcards":[]} # wildcards extension doesn't accept more parameters.
+               )
+r.image
+```
+
 ### Extension support - Model-Keyword
 ```
 # https://github.com/mix1009/model-keyword
