@@ -315,6 +315,7 @@ class WebUIApi:
                 save_images=False,
                 alwayson_scripts={},
                 controlnet_units: List[ControlNetUnit] = [],
+                use_deprecated_controlnet = False,
                 ):
         if sampler_name is None:
             sampler_name = self.default_sampler
@@ -372,13 +373,17 @@ class WebUIApi:
         }
         if mask_image is not None:
             payload['mask'] = b64_img(mask_image)
-
-        if controlnet_units and len(controlnet_units)>0:
+            
+        if use_deprecated_controlnet and controlnet_units and len(controlnet_units)>0:
             payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
             return self.custom_post('controlnet/img2img', payload=payload)
-        else:
-            response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
-            return self._to_api_result(response)
+
+        if controlnet_units and len(controlnet_units)>0:
+            payload["alwayson_scripts"]["ControlNet"] = {
+                "args": [x.to_dict() for x in controlnet_units]
+            }
+        response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
+        return self._to_api_result(response)
 
     def extra_single_image(self,
                            image,  # PIL Image
