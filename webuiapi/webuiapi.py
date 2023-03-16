@@ -203,6 +203,7 @@ class WebUIApi:
                 alwayson_scripts={},
                 controlnet_units: List[ControlNetUnit] = [],
                 sampler_index=None, # deprecated: use sampler_name
+                use_deprecated_controlnet=False,
                 ):
         if sampler_index is None:
             sampler_index = self.default_sampler
@@ -255,12 +256,18 @@ class WebUIApi:
             "save_images": save_images,
             "alwayson_scripts": alwayson_scripts,
         }
-        if controlnet_units and len(controlnet_units)>0:
+
+        if use_deprecated_controlnet and controlnet_units and len(controlnet_units)>0:
             payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
             return self.custom_post('controlnet/txt2img', payload=payload)
-        else:
-            response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
-            return self._to_api_result(response)
+
+        if controlnet_units and len(controlnet_units)>0:
+            payload["alwayson_scripts"]["ControlNet"] = {
+                "args": [x.to_dict() for x in controlnet_units]
+            }
+
+        response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
+        return self._to_api_result(response)
 
     def img2img(self,
                 images=[],  # list of PIL Image
