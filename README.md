@@ -318,9 +318,9 @@ ModelKeywordResult(keywords=['nousr robot'], model='robo-diffusion-v1.ckpt', old
 
 ### Extension support - Instruct-Pix2Pix
 ```
-# https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
-ip2p = webuiapi.InstructPix2PixInterface(api)
-r = ip2p.img2img(prompt='sunset', images=[pil_img], text_cfg=7.5, image_cfg=1.5)
+# Instruct-Pix2Pix extension is now deprecated and is now part of webui.
+# You can use normal img2img with image_cfg_scale when instruct-pix2pix model is loaded.
+r = api.img2img(prompt='sunset', images=[pil_img], cfg_scale=7.5, image_cfg_scale=1.5)
 r.image
 ```
 
