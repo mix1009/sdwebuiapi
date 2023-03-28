@@ -34,6 +34,8 @@ class HiResUpscaler(str, Enum):
     ScuNET_GAN = 'ScuNET GAN'
     ScuNET_PSNR = 'ScuNET PSNR'
     SwinIR_4x = 'SwinIR 4x'
+    R_ERSGAN_4x = 'R-ESRGAN 4x+'
+    R_ERSGAN_4x_Anime6B = 'R-ESRGAN 4x+ Anime6B'
 
 
 @dataclass
