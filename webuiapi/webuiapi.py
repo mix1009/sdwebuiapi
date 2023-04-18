@@ -153,6 +153,8 @@ class WebUIApi:
                 info = r['info']
         elif 'html_info' in r.keys():
             info = r['html_info']
+        elif 'caption' in r.keys():
+            info = r['caption']
 
         parameters = ''
         if 'parameters' in r.keys():
