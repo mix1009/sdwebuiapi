@@ -53,7 +53,7 @@ class ControlNetUnit:
         module: str = "none",
         model: str = "None",
         weight: float = 1.0,
-        resize_mode: str = "Scale to Fit (Inner Fit)",
+        resize_mode: str = "Resize and Fill",
         lowvram: bool = False,
         processor_res: int = 64,
         threshold_a: float = 64,
@@ -80,8 +80,8 @@ class ControlNetUnit:
 
     def to_dict(self):
         return {
-            "input_image": raw_b64_img(self.input_image) if self.input_image else "",
-            "mask": raw_b64_img(self.mask) if self.mask else "",
+            "input_image": raw_b64_img(self.input_image) if self.input_image is not None else None,
+            "mask": raw_b64_img(self.mask) if self.mask is not None else None,
             "module": self.module,
             "model": self.model,
             "weight": self.weight,
