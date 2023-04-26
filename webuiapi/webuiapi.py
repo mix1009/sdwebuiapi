@@ -53,15 +53,17 @@ class ControlNetUnit:
         module: str = "none",
         model: str = "None",
         weight: float = 1.0,
-        resize_mode: str = "Scale to Fit (Inner Fit)",
+        resize_mode: str = "Resize and Fill",
         lowvram: bool = False,
-        processor_res: int = 64,
+        processor_res: int = 512,
         threshold_a: float = 64,
         threshold_b: float = 64,
         guidance: float = 1.0,
         guidance_start: float = 0.0,
         guidance_end: float = 1.0,
-        guessmode: bool = False):
+        guessmode: int = 0,
+        pixel_perfect: bool = False,
+        ):
         
         self.input_image = input_image
         self.mask = mask
@@ -77,11 +79,12 @@ class ControlNetUnit:
         self.guidance_start = guidance_start
         self.guidance_end = guidance_end
         self.guessmode = guessmode
+        self.pixel_perfect = pixel_perfect
 
     def to_dict(self):
         return {
             "input_image": raw_b64_img(self.input_image) if self.input_image else "",
-            "mask": raw_b64_img(self.mask) if self.mask else "",
+            "mask": raw_b64_img(self.mask) if self.mask is not None else None,
             "module": self.module,
             "model": self.model,
             "weight": self.weight,
@@ -94,8 +97,8 @@ class ControlNetUnit:
             "guidance_start": self.guidance_start,
             "guidance_end": self.guidance_end,
             "guessmode": self.guessmode,
+            "pixel_perfect": self.pixel_perfect,
         }
-
 
 def b64_img(image: Image):
     buffered = io.BytesIO()
