@@ -61,7 +61,7 @@ class ControlNetUnit:
         guidance: float = 1.0,
         guidance_start: float = 0.0,
         guidance_end: float = 1.0,
-        guessmode: int = 0,
+        control_mode: int = 2,
         pixel_perfect: bool = False,
         ):
         
@@ -78,7 +78,7 @@ class ControlNetUnit:
         self.guidance = guidance
         self.guidance_start = guidance_start
         self.guidance_end = guidance_end
-        self.guessmode = guessmode
+        self.control_mode = control_mode
         self.pixel_perfect = pixel_perfect
 
     def to_dict(self):
@@ -96,7 +96,7 @@ class ControlNetUnit:
             "guidance": self.guidance,
             "guidance_start": self.guidance_start,
             "guidance_end": self.guidance_end,
-            "guessmode": self.guessmode,
+            "control_mode": self.control_mode,
             "pixel_perfect": self.pixel_perfect,
         }
 
