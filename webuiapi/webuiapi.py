@@ -61,8 +61,9 @@ class ControlNetUnit:
         guidance: float = 1.0,
         guidance_start: float = 0.0,
         guidance_end: float = 1.0,
-        control_mode: int = 2,
+        control_mode: int = 0,
         pixel_perfect: bool = False,
+        guessmode: int = None, # deprecated: use control_mode
         ):
         
         self.input_image = input_image
@@ -78,6 +79,9 @@ class ControlNetUnit:
         self.guidance = guidance
         self.guidance_start = guidance_start
         self.guidance_end = guidance_end
+        if guessmode:
+            print('ControlNetUnit guessmode is deprecated. Please use control_mode instead.')
+            control_mode = guessmode
         self.control_mode = control_mode
         self.pixel_perfect = pixel_perfect
 
@@ -558,6 +562,18 @@ class WebUIApi:
         response = self.session.post(url=url, json=payload)
         return self._to_api_result(response)
 
+    def controlnet_version(self):
+        r = self.custom_get('controlnet/version')
+        return r['version']
+
+    def controlnet_model_list(self):
+        r = self.custom_get('controlnet/model_list')
+        return r['model_list']
+    
+    def controlnet_module_list(self):
+        r = self.custom_get('controlnet/module_list')
+        return r['module_list']
+    
     def util_get_model_names(self):
         return sorted([x['title'] for x in self.get_sd_models()])
     def util_set_model(self, name, find_closest=True):
