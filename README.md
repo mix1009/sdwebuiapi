@@ -327,22 +327,30 @@ r.image
 ### Extension support - ControlNet
 ```
 # https://github.com/Mikubill/sd-webui-controlnet
-cn = webuiapi.ControlNetInterface(api)
-cn.model_list()
+
+api.controlnet_model_list()
 ```
 <pre>
-['control_canny-fp16 [e3fe7712]',
- 'control_depth-fp16 [400750f6]',
- 'control_hed-fp16 [13fee50b]',
- 'control_mlsd-fp16 [e3705cfa]',
- 'control_normal-fp16 [63f96f7c]',
- 'control_openpose-fp16 [9ca67cc5]',
- 'control_scribble-fp16 [c508311e]',
- 'control_seg-fp16 [b9c1cc12]']
+['control_v11e_sd15_ip2p [c4bb465c]',
+ 'control_v11e_sd15_shuffle [526bfdae]',
+ 'control_v11f1p_sd15_depth [cfd03158]',
+ 'control_v11p_sd15_canny [d14c016b]',
+ 'control_v11p_sd15_inpaint [ebff9138]',
+ 'control_v11p_sd15_lineart [43d4be0d]',
+ 'control_v11p_sd15_mlsd [aca30ff0]',
+ 'control_v11p_sd15_normalbae [316696f1]',
+ 'control_v11p_sd15_openpose [cab727d4]',
+ 'control_v11p_sd15_scribble [d4ba51ff]',
+ 'control_v11p_sd15_seg [e1f51eb9]',
+ 'control_v11p_sd15_softedge [a8575a2a]',
+ 'control_v11p_sd15s2_lineart_anime [3825e83e]',
+ 'control_v11u_sd15_tile [1f041471]']
  </pre>
 
-**Use of ControlNetInterface txt2img/img2img is deprecated.** Please use the txt2img and img2img api with controlnet_units parameter.
-
+```
+api.controlnet_version()
+api.controlnet_module_list()
+```
 
 ```
 # normal txt2img
@@ -353,7 +361,7 @@ img
 ![cn1](https://user-images.githubusercontent.com/1288793/222315754-43c6dc8c-2a62-4a31-b51a-f68523118e0d.png)
 
 ```
-# txt2img with ControlNet
+# txt2img with ControlNet (used 1.0 but also supports 2.0)
 unit1 = webuiapi.ControlNetUnit(input_image=img, module='canny', model='control_canny-fp16 [e3fe7712]')
 
 r = api.txt2img(prompt="photo of a beautiful girl", controlnet_units=[unit1])
@@ -364,7 +372,7 @@ r.image
 
 
 ```
-# img2img with multiple ControlNets
+# img2img with multiple ControlNets (used 1.0 but also supports 2.0)
 unit1 = webuiapi.ControlNetUnit(input_image=img, module='canny', model='control_canny-fp16 [e3fe7712]')
 unit2 = webuiapi.ControlNetUnit(input_image=img, module='depth', model='control_depth-fp16 [400750f6]', weight=0.5)
 
