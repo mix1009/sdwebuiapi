@@ -407,4 +407,7 @@ r2.images[2]
 ![cn5](https://user-images.githubusercontent.com/1288793/222315859-e6b6286e-854d-40c1-a516-5a08c827c49a.png)
 
 
-
+```
+r = api.controlnet_detect(images=[img], module='canny')
+r.image
+```
