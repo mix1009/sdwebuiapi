@@ -118,6 +118,9 @@ def raw_b64_img(image: Image):
     return img_base64
 
 class WebUIApi:
+
+    has_controlnet = False
+
     def __init__(self,
                  host='127.0.0.1',
                  port=7860,
@@ -136,6 +139,15 @@ class WebUIApi:
         self.default_steps = steps
 
         self.session = requests.Session()
+
+        self.check_controlnet()
+
+    def check_controlnet(self):
+        try:
+            scripts = self.get_scripts()
+            self.has_controlnet = 'controlnet m2m' in scripts['txt2img']
+        except:
+            pass
 
     def set_auth(self, username, password):
         self.session.auth = (username, password)
@@ -274,6 +286,9 @@ class WebUIApi:
             payload["alwayson_scripts"]["ControlNet"] = {
                 "args": [x.to_dict() for x in controlnet_units]
             }
+        elif self.has_controlnet:
+            # workaround : if not passed, webui will use previous args!
+            payload["alwayson_scripts"]["ControlNet"] = {"args": []}
 
         response = self.session.post(url=f'{self.baseurl}/txt2img', json=payload)
         return self._to_api_result(response)
@@ -391,6 +406,9 @@ class WebUIApi:
             payload["alwayson_scripts"]["ControlNet"] = {
                 "args": [x.to_dict() for x in controlnet_units]
             }
+        elif self.has_controlnet:
+            payload["alwayson_scripts"]["ControlNet"] = {"args": []}
+
         response = self.session.post(url=f'{self.baseurl}/img2img', json=payload)
         return self._to_api_result(response)
 
@@ -498,12 +516,25 @@ class WebUIApi:
 
         response = self.session.post(url=f'{self.baseurl}/interrogate', json=payload)
         return self._to_api_result(response)
+    
+    def interrupt(self):
+        response = self.session.post(url=f'{self.baseurl}/interrupt')
+        return response.json()
+    
+    def skip(self):
+        response = self.session.post(url=f'{self.baseurl}/skip')
+        return response.json()
+
 
     def get_options(self):
         response = self.session.get(url=f'{self.baseurl}/options')
         return response.json()
     def set_options(self, options):
         response = self.session.post(url=f'{self.baseurl}/options', json=options)
+        return response.json()
+
+    def get_cmd_flags(self):
+        response = self.session.get(url=f'{self.baseurl}/cmd-flags')
         return response.json()
 
     def get_progress(self):
@@ -534,16 +565,25 @@ class WebUIApi:
     def get_prompt_styles(self):        
         response = self.session.get(url=f'{self.baseurl}/prompt-styles')
         return response.json()
-    def get_artist_categories(self):        
+    def get_artist_categories(self): # deprecated ?   
         response = self.session.get(url=f'{self.baseurl}/artist-categories')
         return response.json()
-    def get_artists(self):        
+    def get_artists(self): # deprecated ?
         response = self.session.get(url=f'{self.baseurl}/artists')
         return response.json()
     def refresh_checkpoints(self):
         response = self.session.post(url=f'{self.baseurl}/refresh-checkpoints')
         return response.json()
-
+    def get_scripts(self):
+        response = self.session.get(url=f'{self.baseurl}/scripts')
+        return response.json()
+    def get_embeddings(self):        
+        response = self.session.get(url=f'{self.baseurl}/embeddings')
+        return response.json()
+    def get_memory(self):        
+        response = self.session.get(url=f'{self.baseurl}/memory')
+        return response.json()
+    
     def get_endpoint(self, endpoint, baseurl):
         if baseurl:
             return f'{self.baseurl}/{endpoint}'
