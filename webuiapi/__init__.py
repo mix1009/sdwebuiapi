@@ -1,6 +1,6 @@
 from .webuiapi import WebUIApi, WebUIApiResult, Upscaler, HiResUpscaler, b64_img, raw_b64_img, ModelKeywordResult, ModelKeywordInterface, InstructPix2PixInterface, ControlNetInterface, ControlNetUnit
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 __all__ = [
     "__version__",
