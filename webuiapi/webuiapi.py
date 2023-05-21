@@ -613,7 +613,19 @@ class WebUIApi:
     def controlnet_module_list(self):
         r = self.custom_get('controlnet/module_list')
         return r['module_list']
-    
+
+    def controlnet_detect(self, images, module="none", processor_res=512, threshold_a=64, threshold_b=64):
+        input_images = [b64_img(x) for x in images]
+        payload = {
+            "controlnet_module": module,
+            "controlnet_input_images": input_images,
+            "controlnet_processor_res": processor_res,
+            "controlnet_threshold_a": threshold_a,
+            "controlnet_threshold_b": threshold_b,
+        }
+        r = self.custom_post('controlnet/detect', payload=payload)
+        return r
+        
     def util_get_model_names(self):
         return sorted([x['title'] for x in self.get_sd_models()])
     def util_set_model(self, name, find_closest=True):
