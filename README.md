@@ -134,6 +134,16 @@ result4.images[1]
 ```
 ![extra_batch_images_2](https://user-images.githubusercontent.com/1288793/200459542-aa8547a0-f6db-436b-bec1-031a93a7b1d4.jpg)
 
+### Async API support
+txt2img, img2img, extra_single_image, extra_batch_images support async api call with use_async=True parameter. You need asyncio, aiohttp packages installed.
+```
+result = await api.txt2img(prompt="cute kitten",
+                    seed=1001,
+                    use_async=True
+                    )
+result.image
+```
+
 ### Scripts support
 Scripts from AUTOMATIC1111's Web UI are supported, but there aren't official models that define a script's interface.
 
