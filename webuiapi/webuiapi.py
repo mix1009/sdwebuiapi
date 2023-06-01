@@ -355,7 +355,8 @@ class WebUIApi:
         import aiohttp
 
         async with aiohttp.ClientSession() as session:
-            async with session.post(url, json=json) as response:
+            auth = aiohttp.BasicAuth(self.session.auth[0], self.session.auth[1]) if self.session.auth else None
+            async with session.post(url, json=json, auth=auth) as response:
                 return await self._to_api_result_async(response)
 
     def img2img(
