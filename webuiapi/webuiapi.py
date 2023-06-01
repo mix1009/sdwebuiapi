@@ -138,6 +138,8 @@ class WebUIApi:
         sampler="Euler a",
         steps=20,
         use_https=False,
+        username=None,
+        password=None,
     ):
         if baseurl is None:
             if use_https:
@@ -151,7 +153,10 @@ class WebUIApi:
 
         self.session = requests.Session()
 
-        self.check_controlnet()
+        if username and password:
+            self.set_auth(username, password)
+        else:
+            self.check_controlnet()
 
     def check_controlnet(self):
         try:
@@ -162,6 +167,7 @@ class WebUIApi:
 
     def set_auth(self, username, password):
         self.session.auth = (username, password)
+        self.check_controlnet()
 
     def _to_api_result(self, response):
         if response.status_code != 200:
