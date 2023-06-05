@@ -2,7 +2,7 @@ import json
 import requests
 import io
 import base64
-from PIL import Image
+from PIL import Image, PngImagePlugin
 from dataclasses import dataclass
 from enum import Enum
 from typing import List, Dict, Any
@@ -110,21 +110,23 @@ class ControlNetUnit:
         }
 
 
-def b64_img(image: Image):
-    buffered = io.BytesIO()
-    image.save(buffered, format="PNG")
-    img_base64 = "data:image/png;base64," + str(
-        base64.b64encode(buffered.getvalue()), "utf-8"
-    )
-    return img_base64
+def b64_img(image: Image) -> str:
+    return  "data:image/png;base64," + raw_b64_img(image)
 
-
-def raw_b64_img(image: Image):
+def raw_b64_img(image: Image) -> str:
     # XXX controlnet only accepts RAW base64 without headers
-    buffered = io.BytesIO()
-    image.save(buffered, format="PNG")
-    img_base64 = str(base64.b64encode(buffered.getvalue()), "utf-8")
-    return img_base64
+    with io.BytesIO() as output_bytes:
+        metadata = None
+        for key, value in image.info.items():
+            if isinstance(key, str) and isinstance(value, str):
+                if metadata is None:
+                    metadata = PngImagePlugin.PngInfo()
+                metadata.add_text(key, value)
+        image.save(output_bytes, format="PNG", pnginfo=metadata)
+
+        bytes_data = output_bytes.getvalue()
+
+    return str(base64.b64encode(bytes_data), "utf-8")
 
 
 class WebUIApi:
