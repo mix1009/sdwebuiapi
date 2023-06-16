@@ -201,7 +201,7 @@ class WebUIApi:
 
     async def _to_api_result_async(self, response):
         if response.status != 200:
-            raise RuntimeError(response.status, await response.text)
+            raise RuntimeError(response.status, await response.text())
 
         r = await response.json()
         images = []
