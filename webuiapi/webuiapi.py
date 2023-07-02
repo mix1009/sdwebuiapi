@@ -231,7 +231,7 @@ class WebUIApi:
     def txt2img(
         self,
         enable_hr=False,
-        denoising_strength=0.5,
+        denoising_strength=0.7,
         firstphase_width=0,
         firstphase_height=0,
         hr_scale=2,
