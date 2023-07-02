@@ -626,7 +626,7 @@ class WebUIApi:
         response = self.session.get(url=f"{self.baseurl}/samplers")
         return response.json()
 
-    def get_vaes(self):
+    def get_sd_vae(self):
         response = self.session.get(url=f"{self.baseurl}/sd-vae")
         return response.json()
 
@@ -788,7 +788,7 @@ class WebUIApi:
                 time.sleep(check_interval)
 
 
-# Interface for extensions
+## Interface for extensions
 
 
 # https://github.com/mix1009/model-keyword
@@ -878,7 +878,7 @@ class ControlNetInterface:
         controlnet_threshold_b: int = 64,
         controlnet_guidance: float = 1.0,
         enable_hr: bool = False,  # hiresfix
-        denoising_strength: float = 0.5,
+        denoising_strength: float = 0.7,
         hr_scale: float = 1.5,
         hr_upscale: str = "Latent",
         guess_mode: bool = True,
