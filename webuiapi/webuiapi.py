@@ -231,7 +231,7 @@ class WebUIApi:
     def txt2img(
         self,
         enable_hr=False,
-        denoising_strength=0.0,
+        denoising_strength=0.5,
         firstphase_width=0,
         firstphase_height=0,
         hr_scale=2,
@@ -878,7 +878,7 @@ class ControlNetInterface:
         controlnet_threshold_b: int = 64,
         controlnet_guidance: float = 1.0,
         enable_hr: bool = False,  # hiresfix
-        denoising_strength: float = 0.7,
+        denoising_strength: float = 0.5,
         hr_scale: float = 1.5,
         hr_upscale: str = "Latent",
         guess_mode: bool = True,
