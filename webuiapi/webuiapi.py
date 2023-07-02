@@ -111,7 +111,8 @@ class ControlNetUnit:
 
 
 def b64_img(image: Image) -> str:
-    return  "data:image/png;base64," + raw_b64_img(image)
+    return "data:image/png;base64," + raw_b64_img(image)
+
 
 def raw_b64_img(image: Image) -> str:
     # XXX controlnet only accepts RAW base64 without headers
@@ -230,7 +231,7 @@ class WebUIApi:
     def txt2img(
         self,
         enable_hr=False,
-        denoising_strength=0.7,
+        denoising_strength=0.0,
         firstphase_width=0,
         firstphase_height=0,
         hr_scale=2,
@@ -625,8 +626,20 @@ class WebUIApi:
         response = self.session.get(url=f"{self.baseurl}/samplers")
         return response.json()
 
+    def get_vaes(self):
+        response = self.session.get(url=f"{self.baseurl}/sd-vae")
+        return response.json()
+
     def get_upscalers(self):
         response = self.session.get(url=f"{self.baseurl}/upscalers")
+        return response.json()
+
+    def get_latent_upscale_modes(self):
+        response = self.session.get(url=f"{self.baseurl}/latent-upscale-modes")
+        return response.json()
+
+    def get_loras(self):
+        response = self.session.get(url=f"{self.baseurl}/loras")
         return response.json()
 
     def get_sd_models(self):
@@ -775,7 +788,7 @@ class WebUIApi:
                 time.sleep(check_interval)
 
 
-## Interface for extensions
+# Interface for extensions
 
 
 # https://github.com/mix1009/model-keyword
