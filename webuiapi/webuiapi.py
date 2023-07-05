@@ -678,6 +678,10 @@ class WebUIApi:
         response = self.session.get(url=f"{self.baseurl}/scripts")
         return response.json()
 
+    def get_scripts_info(self):
+        response = self.session.get(url=f"{self.baseurl}/script-info")
+        return response.json()
+
     def get_embeddings(self):
         response = self.session.get(url=f"{self.baseurl}/embeddings")
         return response.json()
