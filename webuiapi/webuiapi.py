@@ -87,7 +87,7 @@ class QueuedTaskResult:
             else:
                 result_response = requests.get(self.task_address + "/agent-scheduler/v1/results/" + self.task_id)
                 if result_response.status_code != 200:
-                    raise RuntimeError(f"task id {self.task_id} is not found in queue or results, " + result_response.status_code, result_response.text)
+                    raise RuntimeError(f"task id {self.task_id} is not found in queue or results, " +str(result_response.status_code), result_response.text)
                 self.image = result_response.json()['data'][0]['image']
                 self.terminated = True
                 self.task_address = ""
