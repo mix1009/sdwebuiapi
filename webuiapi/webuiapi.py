@@ -861,7 +861,7 @@ class RemBGInterface:
 
     def rembg(
         self,
-        input_image: str = "",
+        input_image: str = "", #image string (?)
         model: str = 'u2net',  #[None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
         return_mask: bool = False,
         alpha_matting: bool = False,
