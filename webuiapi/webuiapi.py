@@ -58,7 +58,7 @@ class QueuedTaskResult:
     image: str = ""# base64 encoded image
     terminated: bool = False
     cached_image: Image = None
-    
+
     def get_image(self):
         self.check_finished()
         if not self.terminated:
@@ -495,12 +495,8 @@ class WebUIApi:
             "alwayson_scripts": alwayson_scripts,
         }
 
-        if use_deprecated_controlnet and controlnet_units and len(controlnet_units) > 0:
-            payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
-            return self.custom_post(
-                "controlnet/txt2img", payload=payload, use_async=use_async
-            )
-
+        if use_deprecated_controlnet:
+            raise RuntimeError("use_deprecated_controlnet is not supported for txt2img_task")
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
                 "args": [x.to_dict() for x in controlnet_units]
