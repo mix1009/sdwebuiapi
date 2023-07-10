@@ -48,7 +48,6 @@ class WebUIApiResult:
     def image(self):
         return self.images[0]
     
-    @property
     def get_image(self):
         return self.images[0]
     
