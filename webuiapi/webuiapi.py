@@ -869,14 +869,7 @@ class RemBGInterface:
         alpha_matting_background_threshold: int = 10,
         alpha_matting_erode_size: int = 10
     ):
-        if return_mask is not False:
-            return_mask = "true"
-        else:
-            return_mask = "false"
-        if alpha_matting is not False:
-            alpha_matting = "true"
-        else:
-            alpha_matting = "false"
+
         payload = {
             "input_image": b64_img(input_image),
             "model": model,
