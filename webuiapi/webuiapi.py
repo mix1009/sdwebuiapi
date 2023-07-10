@@ -47,6 +47,54 @@ class WebUIApiResult:
     @property
     def image(self):
         return self.images[0]
+    
+    @property
+    def get_image(self):
+        return self.images[0]
+    
+@dataclass
+class QueuedTaskResult:
+    task_id: str
+    task_address: str # address to get task status
+    image: str = ""# base64 encoded image
+    terminated: bool = False
+    cached_image: Image = None
+    
+    def get_image(self):
+        self.check_finished()
+        if not self.terminated:
+            return None
+        if self.cached_image is None:
+            self.cached_image = Image.open(io.BytesIO(base64.b64decode(self.image.split(',')[-1])))
+        return self.cached_image
+    
+    def is_finished(self):
+        self.check_finished()
+        return self.terminated
+    
+    def check_finished(self):
+        if not self.terminated:
+            # self.task_address is base address, /agent-scheduler should be added
+            # check /agent-scheduler/v1/queue
+            # it should return {"current_task_id" : str, "pending_tasks" : [{"api_task_id" : str}]}
+            # if self.task_id is found in any of pending tasks or current_task_id, then it is not finished
+            # else, find /agent-scheduler/v1/results/{task_id}
+            response = requests.get(self.task_address + "/agent-scheduler/v1/queue")
+            req_json = response.json()
+            if self.task_id == req_json["current_task_id"]:
+                return False
+            elif any([self.task_id == task["api_task_id"] for task in req_json["pending_tasks"]]):
+                return False
+            else:
+                result_response = requests.get(self.task_address + "/agent-scheduler/v1/results/" + self.task_id)
+                if result_response.status_code != 200:
+                    raise RuntimeError(f"task id {self.task_id} is not found in queue or results, " + result_response.status_code, result_response.text)
+                self.image = result_response.json()['data'][0]['image']
+                self.terminated = True
+                self.task_address = ""
+                return True
+        else:
+            return True
 
 
 class ControlNetUnit:
@@ -111,8 +159,7 @@ class ControlNetUnit:
 
 
 def b64_img(image: Image) -> str:
-    return "data:image/png;base64," + raw_b64_img(image)
-
+    return  "data:image/png;base64," + raw_b64_img(image)
 
 def raw_b64_img(image: Image) -> str:
     # XXX controlnet only accepts RAW base64 without headers
@@ -177,6 +224,9 @@ class WebUIApi:
             raise RuntimeError(response.status_code, response.text)
 
         r = response.json()
+        # if {"task_id" : "string"} format, wrap 
+        if "task_id" in r.keys():
+            return QueuedTaskResult(r["task_id"], self.baseurl.rstrip('/sdapi/v1'))
         images = []
         if "images" in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r["images"]]
@@ -202,9 +252,11 @@ class WebUIApi:
 
     async def _to_api_result_async(self, response):
         if response.status != 200:
-            raise RuntimeError(response.status, await response.text())
+            raise RuntimeError(response.status, await response.text)
 
         r = await response.json()
+        if "task_id" in r.keys():
+            return QueuedTaskResult(r["task_id"], self.baseurl.rstrip('/sdapi/v1'))
         images = []
         if "images" in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r["images"]]
@@ -345,6 +397,123 @@ class WebUIApi:
             f"{self.baseurl}/txt2img", payload, use_async
         )
 
+    def txt2img_task(
+        self,
+        enable_hr=False,
+        denoising_strength=0.7,
+        firstphase_width=0,
+        firstphase_height=0,
+        hr_scale=2,
+        hr_upscaler=HiResUpscaler.Latent,
+        hr_second_pass_steps=0,
+        hr_resize_x=0,
+        hr_resize_y=0,
+        prompt="",
+        styles=[],
+        seed=-1,
+        subseed=-1,
+        subseed_strength=0.0,
+        seed_resize_from_h=0,
+        seed_resize_from_w=0,
+        sampler_name=None,  # use this instead of sampler_index
+        batch_size=1,
+        n_iter=1,
+        steps=None,
+        cfg_scale=7.0,
+        width=512,
+        height=512,
+        restore_faces=False,
+        tiling=False,
+        do_not_save_samples=False,
+        do_not_save_grid=False,
+        negative_prompt="",
+        eta=1.0,
+        s_churn=0,
+        s_tmax=0,
+        s_tmin=0,
+        s_noise=1,
+        override_settings={},
+        override_settings_restore_afterwards=True,
+        script_args=None,  # List of arguments for the script "script_name"
+        script_name=None,
+        send_images=True,
+        save_images=False,
+        alwayson_scripts={},
+        controlnet_units: List[ControlNetUnit] = [],
+        sampler_index=None,  # deprecated: use sampler_name
+        use_deprecated_controlnet=False,
+        use_async=False,
+    ):
+        if sampler_index is None:
+            sampler_index = self.default_sampler
+        if sampler_name is None:
+            sampler_name = self.default_sampler
+        if steps is None:
+            steps = self.default_steps
+        if script_args is None:
+            script_args = []
+        payload = {
+            "enable_hr": enable_hr,
+            "hr_scale": hr_scale,
+            "hr_upscaler": hr_upscaler,
+            "hr_second_pass_steps": hr_second_pass_steps,
+            "hr_resize_x": hr_resize_x,
+            "hr_resize_y": hr_resize_y,
+            "denoising_strength": denoising_strength,
+            "firstphase_width": firstphase_width,
+            "firstphase_height": firstphase_height,
+            "prompt": prompt,
+            "styles": styles,
+            "seed": seed,
+            "subseed": subseed,
+            "subseed_strength": subseed_strength,
+            "seed_resize_from_h": seed_resize_from_h,
+            "seed_resize_from_w": seed_resize_from_w,
+            "batch_size": batch_size,
+            "n_iter": n_iter,
+            "steps": steps,
+            "cfg_scale": cfg_scale,
+            "width": width,
+            "height": height,
+            "restore_faces": restore_faces,
+            "tiling": tiling,
+            "do_not_save_samples": do_not_save_samples,
+            "do_not_save_grid": do_not_save_grid,
+            "negative_prompt": negative_prompt,
+            "eta": eta,
+            "s_churn": s_churn,
+            "s_tmax": s_tmax,
+            "s_tmin": s_tmin,
+            "s_noise": s_noise,
+            "override_settings": override_settings,
+            "override_settings_restore_afterwards": override_settings_restore_afterwards,
+            "sampler_name": sampler_name,
+            "sampler_index": sampler_index,
+            "script_name": script_name,
+            "script_args": script_args,
+            "send_images": send_images,
+            "save_images": save_images,
+            "alwayson_scripts": alwayson_scripts,
+        }
+
+        if use_deprecated_controlnet and controlnet_units and len(controlnet_units) > 0:
+            payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
+            return self.custom_post(
+                "controlnet/txt2img", payload=payload, use_async=use_async
+            )
+
+        if controlnet_units and len(controlnet_units) > 0:
+            payload["alwayson_scripts"]["ControlNet"] = {
+                "args": [x.to_dict() for x in controlnet_units]
+            }
+        elif self.has_controlnet:
+            # workaround : if not passed, webui will use previous args!
+            payload["alwayson_scripts"]["ControlNet"] = {"args": []}
+
+        return self.post_and_get_api_result(
+            f"{self.baseurl.rstrip('/sdapi/v1')}" + "/agent-scheduler/v1/queue/txt2img", payload, use_async
+        )
+        
     def post_and_get_api_result(self, url, json, use_async):
         if use_async:
             import asyncio
@@ -486,6 +655,129 @@ class WebUIApi:
             f"{self.baseurl}/img2img", payload, use_async
         )
 
+    def img2img_task(
+        self,
+        images=[],  # list of PIL Image
+        resize_mode=0,
+        denoising_strength=0.75,
+        image_cfg_scale=1.5,
+        mask_image=None,  # PIL Image mask
+        mask_blur=4,
+        inpainting_fill=0,
+        inpaint_full_res=True,
+        inpaint_full_res_padding=0,
+        inpainting_mask_invert=0,
+        initial_noise_multiplier=1,
+        prompt="",
+        styles=[],
+        seed=-1,
+        subseed=-1,
+        subseed_strength=0,
+        seed_resize_from_h=0,
+        seed_resize_from_w=0,
+        sampler_name=None,  # use this instead of sampler_index
+        batch_size=1,
+        n_iter=1,
+        steps=None,
+        cfg_scale=7.0,
+        width=512,
+        height=512,
+        restore_faces=False,
+        tiling=False,
+        do_not_save_samples=False,
+        do_not_save_grid=False,
+        negative_prompt="",
+        eta=1.0,
+        s_churn=0,
+        s_tmax=0,
+        s_tmin=0,
+        s_noise=1,
+        override_settings={},
+        override_settings_restore_afterwards=True,
+        script_args=None,  # List of arguments for the script "script_name"
+        sampler_index=None,  # deprecated: use sampler_name
+        include_init_images=False,
+        script_name=None,
+        send_images=True,
+        save_images=False,
+        alwayson_scripts={},
+        controlnet_units: List[ControlNetUnit] = [],
+        use_deprecated_controlnet=False,
+        use_async=False,
+    ):
+        if sampler_name is None:
+            sampler_name = self.default_sampler
+        if sampler_index is None:
+            sampler_index = self.default_sampler
+        if steps is None:
+            steps = self.default_steps
+        if script_args is None:
+            script_args = []
+
+        payload = {
+            "init_images": [b64_img(x) for x in images],
+            "resize_mode": resize_mode,
+            "denoising_strength": denoising_strength,
+            "mask_blur": mask_blur,
+            "inpainting_fill": inpainting_fill,
+            "inpaint_full_res": inpaint_full_res,
+            "inpaint_full_res_padding": inpaint_full_res_padding,
+            "inpainting_mask_invert": inpainting_mask_invert,
+            "initial_noise_multiplier": initial_noise_multiplier,
+            "prompt": prompt,
+            "styles": styles,
+            "seed": seed,
+            "subseed": subseed,
+            "subseed_strength": subseed_strength,
+            "seed_resize_from_h": seed_resize_from_h,
+            "seed_resize_from_w": seed_resize_from_w,
+            "batch_size": batch_size,
+            "n_iter": n_iter,
+            "steps": steps,
+            "cfg_scale": cfg_scale,
+            "image_cfg_scale": image_cfg_scale,
+            "width": width,
+            "height": height,
+            "restore_faces": restore_faces,
+            "tiling": tiling,
+            "do_not_save_samples": do_not_save_samples,
+            "do_not_save_grid": do_not_save_grid,
+            "negative_prompt": negative_prompt,
+            "eta": eta,
+            "s_churn": s_churn,
+            "s_tmax": s_tmax,
+            "s_tmin": s_tmin,
+            "s_noise": s_noise,
+            "override_settings": override_settings,
+            "override_settings_restore_afterwards": override_settings_restore_afterwards,
+            "sampler_name": sampler_name,
+            "sampler_index": sampler_index,
+            "include_init_images": include_init_images,
+            "script_name": script_name,
+            "script_args": script_args,
+            "send_images": send_images,
+            "save_images": save_images,
+            "alwayson_scripts": alwayson_scripts,
+        }
+        if mask_image is not None:
+            payload["mask"] = b64_img(mask_image)
+
+        if use_deprecated_controlnet and controlnet_units and len(controlnet_units) > 0:
+            payload["controlnet_units"] = [x.to_dict() for x in controlnet_units]
+            return self.custom_post(
+                "controlnet/img2img", payload=payload, use_async=use_async
+            )
+
+        if controlnet_units and len(controlnet_units) > 0:
+            payload["alwayson_scripts"]["ControlNet"] = {
+                "args": [x.to_dict() for x in controlnet_units]
+            }
+        elif self.has_controlnet:
+            payload["alwayson_scripts"]["ControlNet"] = {"args": []}
+
+        return self.post_and_get_api_result(
+            f"{self.baseurl.rstrip('/sdapi/v1')}" + "/agent-scheduler/v1/queue/img2img", payload, use_async
+        )
     def extra_single_image(
         self,
         image,  # PIL Image
@@ -608,10 +900,6 @@ class WebUIApi:
 
     def set_options(self, options):
         response = self.session.post(url=f"{self.baseurl}/options", json=options)
-        return response.json()
-
-    def get_cmd_flags(self):
-        response = self.session.get(url=f"{self.baseurl}/cmd-flags")
         return response.json()
 
     def get_progress(self):
