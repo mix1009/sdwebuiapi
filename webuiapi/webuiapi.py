@@ -813,6 +813,9 @@ class ModelKeywordInterface:
         return ModelKeywordResult(keywords, model, oldhash, match_source)
 
 
+
+
+
 # https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
 class InstructPix2PixInterface:
     def __init__(self, webuiapi):
@@ -849,6 +852,41 @@ class InstructPix2PixInterface:
             "output_image_width": output_image_width,
         }
         return self.api.custom_post("instruct-pix2pix/img2img", payload=payload)
+
+
+#https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
+class RemBGInterface:
+    def __init__(self, webuiapi):
+        self.api = webuiapi
+
+    def rembg(
+        self,
+        input_image: str = "",
+        model: str = 'u2net',  #[None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
+        return_mask: bool = False,
+        alpha_matting: bool = False,
+        alpha_matting_foreground_threshold: int = 240,
+        alpha_matting_background_threshold: int = 10,
+        alpha_matting_erode_size: int = 10
+    ):
+        if return_mask is not False:
+            return_mask = "true"
+        else:
+            return_mask = "false"
+        if alpha_matting is not False:
+            alpha_matting = "true"
+        else:
+            alpha_matting = "false"
+        payload = {
+            "input_image": b64_img(input_image),
+            "model": model,
+            "return_mask": return_mask,
+            "alpha_matting":  alpha_matting,
+            "alpha_matting_foreground_threshold": alpha_matting_foreground_threshold,
+            "alpha_matting_background_threshold": alpha_matting_background_threshold,
+            "alpha_matting_erode_size": alpha_matting_erode_size
+        }
+        return self.api.custom_post("rembg", payload=payload)
 
 
 # https://github.com/Mikubill/sd-webui-controlnet
