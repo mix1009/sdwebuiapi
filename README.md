@@ -429,8 +429,6 @@ r.image
 ```
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
 rembg = webuiapi.RemBGInterface(api)
-rembg.rembg()
-
 r = rembg.rembg(input_image=img, model='u2net', return_mask=False)
 r.image
 ```
