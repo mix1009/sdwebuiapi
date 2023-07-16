@@ -585,10 +585,14 @@ class WebUIApi:
         response = self.session.post(url=f"{self.baseurl}/png-info", json=payload)
         return self._to_api_result(response)
 
-    # XXX always returns empty info (2022/12/26)
-    def interrogate(self, image):
+    """
+    :param image pass base64 encoded image or PIL Image
+    :param model "clip" or "deepdanbooru"
+    """
+    def interrogate(self, image, model="clip"):
         payload = {
-            "image": b64_img(image),
+            "image": b64_img(image) if isinstance(image, Image.Image) else image,
+            "model": model,
         }
 
         response = self.session.post(url=f"{self.baseurl}/interrogate", json=payload)
