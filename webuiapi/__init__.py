@@ -10,9 +10,10 @@ from .webuiapi import (
     InstructPix2PixInterface,
     ControlNetInterface,
     ControlNetUnit,
+    RemBGInterface,
 )
 
-__version__ = "0.9.3"
+__version__ = "0.9.5"
 
 __all__ = [
     "__version__",
@@ -26,4 +27,5 @@ __all__ = [
     "InstructPix2PixInterface",
     "ControlNetInterface",
     "ControlNetUnit",
+    "RemBGInterface",
 ]

@@ -445,3 +445,13 @@ r2.images[2]
 r = api.controlnet_detect(images=[img], module='canny')
 r.image
 ```
+
+
+### Extension support - RemBG (contributed by webcoderz)
+```
+# https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
+rembg = webuiapi.RemBGInterface(api)
+r = rembg.rembg(input_image=img, model='u2net', return_mask=False)
+r.image
+```
+

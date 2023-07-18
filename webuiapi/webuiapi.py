@@ -874,10 +874,14 @@ class WebUIApi:
         response = self.session.post(url=f"{self.baseurl}/png-info", json=payload)
         return self._to_api_result(response)
 
-    # XXX always returns empty info (2022/12/26)
-    def interrogate(self, image):
+    """
+    :param image pass base64 encoded image or PIL Image
+    :param model "clip" or "deepdanbooru"
+    """
+    def interrogate(self, image, model="clip"):
         payload = {
-            "image": b64_img(image),
+            "image": b64_img(image) if isinstance(image, Image.Image) else image,
+            "model": model,
         }
 
         response = self.session.post(url=f"{self.baseurl}/interrogate", json=payload)
@@ -1102,6 +1106,9 @@ class ModelKeywordInterface:
         return ModelKeywordResult(keywords, model, oldhash, match_source)
 
 
+
+
+
 # https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
 class InstructPix2PixInterface:
     def __init__(self, webuiapi):
@@ -1138,6 +1145,34 @@ class InstructPix2PixInterface:
             "output_image_width": output_image_width,
         }
         return self.api.custom_post("instruct-pix2pix/img2img", payload=payload)
+
+
+#https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
+class RemBGInterface:
+    def __init__(self, webuiapi):
+        self.api = webuiapi
+
+    def rembg(
+        self,
+        input_image: str = "", #image string (?)
+        model: str = 'u2net',  #[None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
+        return_mask: bool = False,
+        alpha_matting: bool = False,
+        alpha_matting_foreground_threshold: int = 240,
+        alpha_matting_background_threshold: int = 10,
+        alpha_matting_erode_size: int = 10
+    ):
+
+        payload = {
+            "input_image": b64_img(input_image),
+            "model": model,
+            "return_mask": return_mask,
+            "alpha_matting":  alpha_matting,
+            "alpha_matting_foreground_threshold": alpha_matting_foreground_threshold,
+            "alpha_matting_background_threshold": alpha_matting_background_threshold,
+            "alpha_matting_erode_size": alpha_matting_erode_size
+        }
+        return self.api.custom_post("rembg", payload=payload)
 
 
 # https://github.com/Mikubill/sd-webui-controlnet
