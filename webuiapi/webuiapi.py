@@ -88,7 +88,7 @@ class QueuedTaskResult:
                 result_response = requests.get(self.task_address + "/agent-scheduler/v1/results/" + self.task_id)
                 if result_response.status_code != 200:
                     raise RuntimeError(f"task id {self.task_id} is not found in queue or results, " +str(result_response.status_code), result_response.text)
-                if result_response.json()['success'] == False:
+                if result_response.json().get('success', False) == False:
                     return False
                 self.image = result_response.json()['data'][0]['image']
                 self.terminated = True
@@ -227,7 +227,9 @@ class WebUIApi:
         r = response.json()
         # if {"task_id" : "string"} format, wrap 
         if "task_id" in r.keys():
-            return QueuedTaskResult(r["task_id"], self.baseurl.rstrip('/sdapi/v1'))
+            # remove '/sdapi/v1' from baseurl
+            task_address = self.baseurl.split('/sdapi/v1')[0]
+            return QueuedTaskResult(r["task_id"], task_address=task_address)
         images = []
         if "images" in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r["images"]]
@@ -257,7 +259,7 @@ class WebUIApi:
 
         r = await response.json()
         if "task_id" in r.keys():
-            return QueuedTaskResult(r["task_id"], self.baseurl.rstrip('/sdapi/v1'))
+            return QueuedTaskResult(r["task_id"], self.baseurl.split('/sdapi/v1')[0])
         images = []
         if "images" in r.keys():
             images = [Image.open(io.BytesIO(base64.b64decode(i))) for i in r["images"]]
@@ -508,7 +510,7 @@ class WebUIApi:
             payload["alwayson_scripts"]["ControlNet"] = {"args": []}
 
         return self.post_and_get_api_result(
-            f"{self.baseurl.rstrip('/sdapi/v1')}" + "/agent-scheduler/v1/queue/txt2img", payload, use_async
+            f"{self.baseurl.split('/sdapi/v1')[0]}" + "/agent-scheduler/v1/queue/txt2img", payload, use_async
         )
         
     def post_and_get_api_result(self, url, json, use_async):
@@ -773,7 +775,7 @@ class WebUIApi:
             payload["alwayson_scripts"]["ControlNet"] = {"args": []}
 
         return self.post_and_get_api_result(
-            f"{self.baseurl.rstrip('/sdapi/v1')}" + "/agent-scheduler/v1/queue/img2img", payload, use_async
+            f"{self.baseurl.split('/sdapi/v1')[0]}" + "/agent-scheduler/v1/queue/img2img", payload, use_async
         )
     def extra_single_image(
         self,
