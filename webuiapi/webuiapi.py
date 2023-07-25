@@ -522,6 +522,7 @@ class WebUIApi:
             save_images=False,
             alwayson_scripts={},
             controlnet_units: List[ControlNetUnit] = [],
+            adetailer: List[ADetailer] = [],
             use_deprecated_controlnet=False,
             use_async=False,
     ):
@@ -587,6 +588,13 @@ class WebUIApi:
             return self.custom_post(
                 "controlnet/img2img", payload=payload, use_async=use_async
             )
+        if adetailer and len(adetailer) > 0:
+            ads = [True]
+            for x in adetailer:
+                ads.append(x.to_dict())
+            payload["alwayson_scripts"]["ADetailer"] = {
+                "args": ads
+            }
 
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
