@@ -1067,7 +1067,13 @@ class WebUIApi:
             print("model not found")
 
     def util_get_current_model(self):
-        return self.get_options()["sd_model_checkpoint"]
+        options = self.get_options()
+        if ("sd_model_checkpoint" in options):
+            return options["sd_model_checkpoint"]
+        else:
+            sd_models = self.get_sd_models()
+            sd_model = [model for model in sd_models if model["sha256"] == options["sd_checkpoint_hash"]]
+            return sd_model[0]["title"]
 
     def util_wait_for_ready(self, check_interval=5.0):
         import time

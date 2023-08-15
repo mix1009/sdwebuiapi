@@ -305,6 +305,9 @@ old_model = api.util_get_current_model()
 # get list of available models
 models = api.util_get_model_names()
 
+# refresh list of models
+api.refresh_checkpoints()
+
 # set model (use exact name)
 api.util_set_model(models[0])
 
