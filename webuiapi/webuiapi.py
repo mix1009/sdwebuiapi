@@ -7,7 +7,7 @@ import base64
 from PIL import Image, PngImagePlugin
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict, Any, Literal
+from typing import List, Dict, Any, Literal, Optional
 
 
 class Upscaler(str, Enum):
