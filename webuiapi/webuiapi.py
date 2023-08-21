@@ -1,11 +1,13 @@
 import json
+
+import PIL
 import requests
 import io
 import base64
 from PIL import Image, PngImagePlugin
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Literal
 
 
 class Upscaler(str, Enum):
@@ -108,6 +110,145 @@ class ControlNetUnit:
             "control_mode": self.control_mode,
             "pixel_perfect": self.pixel_perfect,
         }
+
+class ADetailer:
+    def __init__(self,
+                 ad_model: str = "None",
+                 ad_prompt: str = "",
+                 ad_negative_prompt: str = "",
+                 ad_confidence: float = 0.3,
+                 ad_mask_min_ratio: float = 0.0,
+                 ad_mask_max_ratio: float = 1.0,
+                 ad_dilate_erode: int = 4,
+                 ad_x_offset: int = 0,
+                 ad_y_offset: int = 0,
+                 ad_mask_merge_invert: Literal["None", "Merge", "Merge and Invert"] = "None",
+                 ad_mask_blur: int = 4,
+                 ad_denoising_strength: int = 0.4,
+                 ad_inpaint_only_masked: bool = True,
+                 ad_inpaint_only_masked_padding: int = 32,
+                 ad_use_inpaint_width_height: bool = False,
+                 ad_inpaint_width: int = 512,
+                 ad_inpaint_height: int = 512,
+                 ad_use_steps: bool = False,
+                 ad_steps: int = 28,
+                 ad_use_cfg_scale: bool = False,
+                 ad_cfg_scale: float = 7.0,
+                 # ad_use_sampler: bool = False,
+                 # ad_sampler: str = "None",
+                 ad_use_noise_multiplier: bool = False,
+                 ad_noise_multiplier=1.0,
+                 ad_restore_face: bool = False,
+                 ad_controlnet_model: str = "None",
+                 ad_controlnet_module: Optional[str] = None,
+                 ad_controlnet_weight: float = 1.0,
+                 ad_controlnet_guidance_start: float = 0.0,
+                 ad_controlnet_guidance_end: float = 1.0,
+                 is_api: bool = True
+                 ):
+        self.ad_model = ad_model
+        self.ad_prompt = ad_prompt
+        self.ad_negative_prompt = ad_negative_prompt
+        self.ad_confidence = ad_confidence
+        self.ad_mask_min_ratio = ad_mask_min_ratio
+        self.ad_mask_max_ratio = ad_mask_max_ratio
+        self.ad_dilate_erode = ad_dilate_erode
+        self.ad_x_offset = ad_x_offset
+        self.ad_y_offset = ad_y_offset
+        self.ad_mask_merge_invert = ad_mask_merge_invert
+        self.ad_mask_blur = ad_mask_blur
+        self.ad_denoising_strength = ad_denoising_strength
+        self.ad_inpaint_only_masked = ad_inpaint_only_masked
+        self.ad_inpaint_only_masked_padding = ad_inpaint_only_masked_padding
+        self.ad_use_inpaint_width_height = ad_use_inpaint_width_height
+        self.ad_inpaint_width = ad_inpaint_width
+        self.ad_inpaint_height = ad_inpaint_height
+        self.ad_use_steps = ad_use_steps
+        self.ad_steps = ad_steps
+        self.ad_use_cfg_scale = ad_use_cfg_scale
+        self.ad_cfg_scale = ad_cfg_scale
+        self.ad_use_noise_multiplier = ad_use_noise_multiplier
+        self.ad_noise_multiplier = ad_noise_multiplier
+        self.ad_restore_face = ad_restore_face
+        self.ad_controlnet_model = ad_controlnet_model
+        self.ad_controlnet_module = ad_controlnet_module
+        self.ad_controlnet_weight = ad_controlnet_weight
+        self.ad_controlnet_guidance_start = ad_controlnet_guidance_start
+        self.ad_controlnet_guidance_end = ad_controlnet_guidance_end
+        self.is_api = is_api
+
+    def to_dict(self):
+        return {
+            "ad_model": self.ad_model,
+            "ad_prompt": self.ad_prompt,
+            "ad_negative_prompt": self.ad_negative_prompt,
+            "ad_confidence": self.ad_confidence,
+            "ad_mask_min_ratio": self.ad_mask_min_ratio,
+            "ad_mask_max_ratio": self.ad_mask_max_ratio,
+            "ad_dilate_erode": self.ad_dilate_erode,
+            "ad_x_offset": self.ad_x_offset,
+            "ad_y_offset": self.ad_y_offset,
+            "ad_mask_merge_invert": self.ad_mask_merge_invert,
+            "ad_mask_blur": self.ad_mask_blur,
+            "ad_denoising_strength": self.ad_denoising_strength,
+            "ad_inpaint_only_masked": self.ad_inpaint_only_masked,
+            "ad_inpaint_only_masked_padding": self.ad_inpaint_only_masked_padding,
+            "ad_use_inpaint_width_height": self.ad_use_inpaint_width_height,
+            "ad_inpaint_width": self.ad_inpaint_width,
+            "ad_inpaint_height": self.ad_inpaint_height,
+            "ad_use_steps": self.ad_use_steps,
+            "ad_steps": self.ad_steps,
+            "ad_use_cfg_scale": self.ad_use_cfg_scale,
+            "ad_cfg_scale": self.ad_cfg_scale,
+            "ad_use_noise_multiplier": self.ad_use_noise_multiplier,
+            "ad_noise_multiplier": self.ad_noise_multiplier,
+            "ad_restore_face": self.ad_restore_face,
+            "ad_controlnet_model": self.ad_controlnet_model,
+            "ad_controlnet_module": self.ad_controlnet_module,
+            "ad_controlnet_weight": self.ad_controlnet_weight,
+            "ad_controlnet_guidance_start": self.ad_controlnet_guidance_start,
+            "ad_controlnet_guidance_end": self.ad_controlnet_guidance_end,
+        }
+
+
+class Roop:
+    def __init__(self, img: PIL.Image ,
+                 enable: bool = True,
+                 faces_index: str = "0",
+                 model: str = None,
+                 face_restorer_name: str = "GFPGAN",
+                 face_restorer_visibility: float = 1,
+                 upscaler_name: str = "R-ESRGAN 4x+",
+                 upscaler_scale: float = 1,
+                 upscaler_visibility: float = 1,
+                 swap_in_source: bool = False,
+                 swap_in_generated: bool = True):
+        self.img = b64_img(img)
+        self.enable = enable
+        self.faces_index = faces_index
+        self.model = model
+        self.face_restorer_name = face_restorer_name
+        self.face_restorer_visibility = face_restorer_visibility
+        self.upscaler_name = upscaler_name
+        self.upscaler_scale = upscaler_scale
+        self.upscaler_visibility = upscaler_visibility
+        self.swap_in_source = swap_in_source
+        self.swap_in_generated = swap_in_generated
+
+    def to_dict(self):
+        return [
+            self.img,
+            self.enable,
+            self.faces_index,
+            self.model,
+            self.face_restorer_name,
+            self.face_restorer_visibility,
+            self.upscaler_name,
+            self.upscaler_scale,
+            self.upscaler_visibility,
+            self.swap_in_source,
+            self.swap_in_generated]
+
 
 
 def b64_img(image: Image) -> str:
@@ -271,6 +412,8 @@ class WebUIApi:
         save_images=False,
         alwayson_scripts={},
         controlnet_units: List[ControlNetUnit] = [],
+        adetailer: List[ADetailer] = [],
+        roop: Roop = None,
         sampler_index=None,  # deprecated: use sampler_name
         use_deprecated_controlnet=False,
         use_async=False,
@@ -332,6 +475,18 @@ class WebUIApi:
             return self.custom_post(
                 "controlnet/txt2img", payload=payload, use_async=use_async
             )
+
+        if adetailer and len(adetailer) > 0:
+            ads = [True]
+            for x in adetailer:
+                ads.append(x.to_dict())
+            payload["alwayson_scripts"]["ADetailer"] = {
+                "args": ads
+            }
+        if roop :
+            payload["alwayson_scripts"]["roop"] = {
+                "args": roop.to_dict()
+            }
 
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
@@ -409,6 +564,8 @@ class WebUIApi:
         save_images=False,
         alwayson_scripts={},
         controlnet_units: List[ControlNetUnit] = [],
+        adetailer: List[ADetailer] = [],
+        roop: Roop = None,
         use_deprecated_controlnet=False,
         use_async=False,
     ):
@@ -474,6 +631,18 @@ class WebUIApi:
             return self.custom_post(
                 "controlnet/img2img", payload=payload, use_async=use_async
             )
+
+        if adetailer and len(adetailer) > 0:
+            ads = [True]
+            for x in adetailer:
+                ads.append(x.to_dict())
+            payload["alwayson_scripts"]["ADetailer"] = {
+                "args": ads
+            }
+        if roop :
+            payload["alwayson_scripts"]["roop"] = {
+                "args": roop.to_dict()
+            }
 
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
