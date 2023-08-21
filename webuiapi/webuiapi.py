@@ -1,11 +1,13 @@
 import json
+
+import PIL
 import requests
 import io
 import base64
 from PIL import Image, PngImagePlugin
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict, Any, Literal, Optional
+from typing import List, Dict, Any, Literal
 
 
 class Upscaler(str, Enum):
@@ -51,23 +53,23 @@ class WebUIApiResult:
 
 class ControlNetUnit:
     def __init__(
-            self,
-            input_image: Image = None,
-            mask: Image = None,
-            module: str = "none",
-            model: str = "None",
-            weight: float = 1.0,
-            resize_mode: str = "Resize and Fill",
-            lowvram: bool = False,
-            processor_res: int = 512,
-            threshold_a: float = 64,
-            threshold_b: float = 64,
-            guidance: float = 1.0,
-            guidance_start: float = 0.0,
-            guidance_end: float = 1.0,
-            control_mode: int = 0,
-            pixel_perfect: bool = False,
-            guessmode: int = None,  # deprecated: use control_mode
+        self,
+        input_image: Image = None,
+        mask: Image = None,
+        module: str = "none",
+        model: str = "None",
+        weight: float = 1.0,
+        resize_mode: str = "Resize and Fill",
+        lowvram: bool = False,
+        processor_res: int = 512,
+        threshold_a: float = 64,
+        threshold_b: float = 64,
+        guidance: float = 1.0,
+        guidance_start: float = 0.0,
+        guidance_end: float = 1.0,
+        control_mode: int = 0,
+        pixel_perfect: bool = False,
+        guessmode: int = None,  # deprecated: use control_mode
     ):
         self.input_image = input_image
         self.mask = mask
@@ -109,7 +111,6 @@ class ControlNetUnit:
             "pixel_perfect": self.pixel_perfect,
         }
 
-
 class ADetailer:
     def __init__(self,
                  ad_model: str = "None",
@@ -133,8 +134,8 @@ class ADetailer:
                  ad_steps: int = 28,
                  ad_use_cfg_scale: bool = False,
                  ad_cfg_scale: float = 7.0,
-                 ad_use_sampler: bool = False,
-                 ad_sampler: str = "DPM++ 2M Karras",
+                 # ad_use_sampler: bool = False,
+                 # ad_sampler: str = "None",
                  ad_use_noise_multiplier: bool = False,
                  ad_noise_multiplier=1.0,
                  ad_restore_face: bool = False,
@@ -166,8 +167,6 @@ class ADetailer:
         self.ad_steps = ad_steps
         self.ad_use_cfg_scale = ad_use_cfg_scale
         self.ad_cfg_scale = ad_cfg_scale
-        self.ad_use_sampler = ad_use_sampler
-        self.ad_sampler = ad_sampler
         self.ad_use_noise_multiplier = ad_use_noise_multiplier
         self.ad_noise_multiplier = ad_noise_multiplier
         self.ad_restore_face = ad_restore_face
@@ -201,8 +200,6 @@ class ADetailer:
             "ad_steps": self.ad_steps,
             "ad_use_cfg_scale": self.ad_use_cfg_scale,
             "ad_cfg_scale": self.ad_cfg_scale,
-            "ad_use_sampler": self.ad_use_sampler,
-            "ad_sampler": self.ad_sampler,
             "ad_use_noise_multiplier": self.ad_use_noise_multiplier,
             "ad_noise_multiplier": self.ad_noise_multiplier,
             "ad_restore_face": self.ad_restore_face,
@@ -212,6 +209,46 @@ class ADetailer:
             "ad_controlnet_guidance_start": self.ad_controlnet_guidance_start,
             "ad_controlnet_guidance_end": self.ad_controlnet_guidance_end,
         }
+
+
+class Roop:
+    def __init__(self, img: PIL.Image ,
+                 enable: bool = True,
+                 faces_index: str = "0",
+                 model: str = None,
+                 face_restorer_name: str = "GFPGAN",
+                 face_restorer_visibility: float = 1,
+                 upscaler_name: str = "R-ESRGAN 4x+",
+                 upscaler_scale: float = 1,
+                 upscaler_visibility: float = 1,
+                 swap_in_source: bool = False,
+                 swap_in_generated: bool = True):
+        self.img = b64_img(img)
+        self.enable = enable
+        self.faces_index = faces_index
+        self.model = model
+        self.face_restorer_name = face_restorer_name
+        self.face_restorer_visibility = face_restorer_visibility
+        self.upscaler_name = upscaler_name
+        self.upscaler_scale = upscaler_scale
+        self.upscaler_visibility = upscaler_visibility
+        self.swap_in_source = swap_in_source
+        self.swap_in_generated = swap_in_generated
+
+    def to_dict(self):
+        return [
+            self.img,
+            self.enable,
+            self.faces_index,
+            self.model,
+            self.face_restorer_name,
+            self.face_restorer_visibility,
+            self.upscaler_name,
+            self.upscaler_scale,
+            self.upscaler_visibility,
+            self.swap_in_source,
+            self.swap_in_generated]
+
 
 
 def b64_img(image: Image) -> str:
@@ -238,15 +275,15 @@ class WebUIApi:
     has_controlnet = False
 
     def __init__(
-            self,
-            host="127.0.0.1",
-            port=7860,
-            baseurl=None,
-            sampler="Euler a",
-            steps=20,
-            use_https=False,
-            username=None,
-            password=None,
+        self,
+        host="127.0.0.1",
+        port=7860,
+        baseurl=None,
+        sampler="Euler a",
+        steps=20,
+        use_https=False,
+        username=None,
+        password=None,
     ):
         if baseurl is None:
             if use_https:
@@ -333,53 +370,53 @@ class WebUIApi:
         return WebUIApiResult(images, parameters, info)
 
     def txt2img(
-            self,
-            enable_hr=False,
-            denoising_strength=0.7,
-            firstphase_width=0,
-            firstphase_height=0,
-            hr_scale=2,
-            hr_upscaler=HiResUpscaler.Latent,
-            hr_second_pass_steps=0,
-            hr_resize_x=0,
-            hr_resize_y=0,
-            prompt="",
-            styles=[],
-            seed=-1,
-            subseed=-1,
-            subseed_strength=0.0,
-            seed_resize_from_h=0,
-            seed_resize_from_w=0,
-            sampler_name=None,  # use this instead of sampler_index
-            batch_size=1,
-            n_iter=1,
-            steps=None,
-            cfg_scale=7.0,
-            width=512,
-            height=512,
-            restore_faces=False,
-            tiling=False,
-            do_not_save_samples=False,
-            do_not_save_grid=False,
-            negative_prompt="",
-            eta=1.0,
-            s_churn=0,
-            s_tmax=0,
-            s_tmin=0,
-            s_noise=1,
-            override_settings={},
-            override_settings_restore_afterwards=True,
-            script_args=None,  # List of arguments for the script "script_name"
-            script_name=None,
-            send_images=True,
-            save_images=False,
-            alwayson_scripts={},
-            controlnet_units: List[ControlNetUnit] = [],
-            adetailer: List[ADetailer] = [],
-            demo: List = [],
-            sampler_index=None,  # deprecated: use sampler_name
-            use_deprecated_controlnet=False,
-            use_async=False,
+        self,
+        enable_hr=False,
+        denoising_strength=0.7,
+        firstphase_width=0,
+        firstphase_height=0,
+        hr_scale=2,
+        hr_upscaler=HiResUpscaler.Latent,
+        hr_second_pass_steps=0,
+        hr_resize_x=0,
+        hr_resize_y=0,
+        prompt="",
+        styles=[],
+        seed=-1,
+        subseed=-1,
+        subseed_strength=0.0,
+        seed_resize_from_h=0,
+        seed_resize_from_w=0,
+        sampler_name=None,  # use this instead of sampler_index
+        batch_size=1,
+        n_iter=1,
+        steps=None,
+        cfg_scale=7.0,
+        width=512,
+        height=512,
+        restore_faces=False,
+        tiling=False,
+        do_not_save_samples=False,
+        do_not_save_grid=False,
+        negative_prompt="",
+        eta=1.0,
+        s_churn=0,
+        s_tmax=0,
+        s_tmin=0,
+        s_noise=1,
+        override_settings={},
+        override_settings_restore_afterwards=True,
+        script_args=None,  # List of arguments for the script "script_name"
+        script_name=None,
+        send_images=True,
+        save_images=False,
+        alwayson_scripts={},
+        controlnet_units: List[ControlNetUnit] = [],
+        adetailer: List[ADetailer] = [],
+        roop: Roop = None,
+        sampler_index=None,  # deprecated: use sampler_name
+        use_deprecated_controlnet=False,
+        use_async=False,
     ):
         if sampler_index is None:
             sampler_index = self.default_sampler
@@ -438,14 +475,19 @@ class WebUIApi:
             return self.custom_post(
                 "controlnet/txt2img", payload=payload, use_async=use_async
             )
-
+        
         if adetailer and len(adetailer) > 0:
-            ads=[True]
+            ads = [True]
             for x in adetailer:
                 ads.append(x.to_dict())
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": ads
             }
+        if roop :
+            payload["alwayson_scripts"]["roop"] = {
+                "args": roop.to_dict()
+            }
+
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
                 "args": [x.to_dict() for x in controlnet_units]
@@ -476,55 +518,56 @@ class WebUIApi:
                 return await self._to_api_result_async(response)
 
     def img2img(
-            self,
-            images=[],  # list of PIL Image
-            resize_mode=0,
-            denoising_strength=0.75,
-            image_cfg_scale=1.5,
-            mask_image=None,  # PIL Image mask
-            mask_blur=4,
-            inpainting_fill=0,
-            inpaint_full_res=True,
-            inpaint_full_res_padding=0,
-            inpainting_mask_invert=0,
-            initial_noise_multiplier=1,
-            prompt="",
-            styles=[],
-            seed=-1,
-            subseed=-1,
-            subseed_strength=0,
-            seed_resize_from_h=0,
-            seed_resize_from_w=0,
-            sampler_name=None,  # use this instead of sampler_index
-            batch_size=1,
-            n_iter=1,
-            steps=None,
-            cfg_scale=7.0,
-            width=512,
-            height=512,
-            restore_faces=False,
-            tiling=False,
-            do_not_save_samples=False,
-            do_not_save_grid=False,
-            negative_prompt="",
-            eta=1.0,
-            s_churn=0,
-            s_tmax=0,
-            s_tmin=0,
-            s_noise=1,
-            override_settings={},
-            override_settings_restore_afterwards=True,
-            script_args=None,  # List of arguments for the script "script_name"
-            sampler_index=None,  # deprecated: use sampler_name
-            include_init_images=False,
-            script_name=None,
-            send_images=True,
-            save_images=False,
-            alwayson_scripts={},
-            controlnet_units: List[ControlNetUnit] = [],
-            adetailer: List[ADetailer] = [],
-            use_deprecated_controlnet=False,
-            use_async=False,
+        self,
+        images=[],  # list of PIL Image
+        resize_mode=0,
+        denoising_strength=0.75,
+        image_cfg_scale=1.5,
+        mask_image=None,  # PIL Image mask
+        mask_blur=4,
+        inpainting_fill=0,
+        inpaint_full_res=True,
+        inpaint_full_res_padding=0,
+        inpainting_mask_invert=0,
+        initial_noise_multiplier=1,
+        prompt="",
+        styles=[],
+        seed=-1,
+        subseed=-1,
+        subseed_strength=0,
+        seed_resize_from_h=0,
+        seed_resize_from_w=0,
+        sampler_name=None,  # use this instead of sampler_index
+        batch_size=1,
+        n_iter=1,
+        steps=None,
+        cfg_scale=7.0,
+        width=512,
+        height=512,
+        restore_faces=False,
+        tiling=False,
+        do_not_save_samples=False,
+        do_not_save_grid=False,
+        negative_prompt="",
+        eta=1.0,
+        s_churn=0,
+        s_tmax=0,
+        s_tmin=0,
+        s_noise=1,
+        override_settings={},
+        override_settings_restore_afterwards=True,
+        script_args=None,  # List of arguments for the script "script_name"
+        sampler_index=None,  # deprecated: use sampler_name
+        include_init_images=False,
+        script_name=None,
+        send_images=True,
+        save_images=False,
+        alwayson_scripts={},
+        controlnet_units: List[ControlNetUnit] = [],
+        adetailer: List[ADetailer] = [],
+        roop: Roop = None,
+        use_deprecated_controlnet=False,
+        use_async=False,
     ):
         if sampler_name is None:
             sampler_name = self.default_sampler
@@ -588,12 +631,17 @@ class WebUIApi:
             return self.custom_post(
                 "controlnet/img2img", payload=payload, use_async=use_async
             )
+        
         if adetailer and len(adetailer) > 0:
             ads = [True]
             for x in adetailer:
                 ads.append(x.to_dict())
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": ads
+            }
+        if roop :
+            payload["alwayson_scripts"]["roop"] = {
+                "args": roop.to_dict()
             }
 
         if controlnet_units and len(controlnet_units) > 0:
@@ -608,22 +656,22 @@ class WebUIApi:
         )
 
     def extra_single_image(
-            self,
-            image,  # PIL Image
-            resize_mode=0,
-            show_extras_results=True,
-            gfpgan_visibility=0,
-            codeformer_visibility=0,
-            codeformer_weight=0,
-            upscaling_resize=2,
-            upscaling_resize_w=512,
-            upscaling_resize_h=512,
-            upscaling_crop=True,
-            upscaler_1="None",
-            upscaler_2="None",
-            extras_upscaler_2_visibility=0,
-            upscale_first=False,
-            use_async=False,
+        self,
+        image,  # PIL Image
+        resize_mode=0,
+        show_extras_results=True,
+        gfpgan_visibility=0,
+        codeformer_visibility=0,
+        codeformer_weight=0,
+        upscaling_resize=2,
+        upscaling_resize_w=512,
+        upscaling_resize_h=512,
+        upscaling_crop=True,
+        upscaler_1="None",
+        upscaler_2="None",
+        extras_upscaler_2_visibility=0,
+        upscale_first=False,
+        use_async=False,
     ):
         payload = {
             "resize_mode": resize_mode,
@@ -647,23 +695,23 @@ class WebUIApi:
         )
 
     def extra_batch_images(
-            self,
-            images,  # list of PIL images
-            name_list=None,  # list of image names
-            resize_mode=0,
-            show_extras_results=True,
-            gfpgan_visibility=0,
-            codeformer_visibility=0,
-            codeformer_weight=0,
-            upscaling_resize=2,
-            upscaling_resize_w=512,
-            upscaling_resize_h=512,
-            upscaling_crop=True,
-            upscaler_1="None",
-            upscaler_2="None",
-            extras_upscaler_2_visibility=0,
-            upscale_first=False,
-            use_async=False,
+        self,
+        images,  # list of PIL images
+        name_list=None,  # list of image names
+        resize_mode=0,
+        show_extras_results=True,
+        gfpgan_visibility=0,
+        codeformer_visibility=0,
+        codeformer_weight=0,
+        upscaling_resize=2,
+        upscaling_resize_w=512,
+        upscaling_resize_h=512,
+        upscaling_crop=True,
+        upscaler_1="None",
+        upscaler_2="None",
+        extras_upscaler_2_visibility=0,
+        upscale_first=False,
+        use_async=False,
     ):
         if name_list is not None:
             if len(name_list) != len(images):
@@ -710,7 +758,6 @@ class WebUIApi:
     :param image pass base64 encoded image or PIL Image
     :param model "clip" or "deepdanbooru"
     """
-
     def interrogate(self, image, model="clip"):
         payload = {
             "image": b64_img(image) if isinstance(image, Image.Image) else image,
@@ -851,7 +898,7 @@ class WebUIApi:
         return r["module_list"]
 
     def controlnet_detect(
-            self, images, module="none", processor_res=512, threshold_a=64, threshold_b=64
+        self, images, module="none", processor_res=512, threshold_a=64, threshold_b=64
     ):
         input_images = [b64_img(x) for x in images]
         payload = {
@@ -945,25 +992,28 @@ class ModelKeywordInterface:
         return ModelKeywordResult(keywords, model, oldhash, match_source)
 
 
+
+
+
 # https://github.com/Klace/stable-diffusion-webui-instruct-pix2pix
 class InstructPix2PixInterface:
     def __init__(self, webuiapi):
         self.api = webuiapi
 
     def img2img(
-            self,
-            images=[],
-            prompt: str = "",
-            negative_prompt: str = "",
-            output_batches: int = 1,
-            sampler: str = "Euler a",
-            steps: int = 20,
-            seed: int = 0,
-            randomize_seed: bool = True,
-            text_cfg: float = 7.5,
-            image_cfg: float = 1.5,
-            randomize_cfg: bool = False,
-            output_image_width: int = 512,
+        self,
+        images=[],
+        prompt: str = "",
+        negative_prompt: str = "",
+        output_batches: int = 1,
+        sampler: str = "Euler a",
+        steps: int = 20,
+        seed: int = 0,
+        randomize_seed: bool = True,
+        text_cfg: float = 7.5,
+        image_cfg: float = 1.5,
+        randomize_cfg: bool = False,
+        output_image_width: int = 512,
     ):
         init_images = [b64_img(x) for x in images]
         payload = {
@@ -983,27 +1033,27 @@ class InstructPix2PixInterface:
         return self.api.custom_post("instruct-pix2pix/img2img", payload=payload)
 
 
-# https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
+#https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
 class RemBGInterface:
     def __init__(self, webuiapi):
         self.api = webuiapi
 
     def rembg(
-            self,
-            input_image: str = "",  # image string (?)
-            model: str = 'u2net',
-            # [None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
-            return_mask: bool = False,
-            alpha_matting: bool = False,
-            alpha_matting_foreground_threshold: int = 240,
-            alpha_matting_background_threshold: int = 10,
-            alpha_matting_erode_size: int = 10
+        self,
+        input_image: str = "", #image string (?)
+        model: str = 'u2net',  #[None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
+        return_mask: bool = False,
+        alpha_matting: bool = False,
+        alpha_matting_foreground_threshold: int = 240,
+        alpha_matting_background_threshold: int = 10,
+        alpha_matting_erode_size: int = 10
     ):
+
         payload = {
             "input_image": b64_img(input_image),
             "model": model,
             "return_mask": return_mask,
-            "alpha_matting": alpha_matting,
+            "alpha_matting":  alpha_matting,
             "alpha_matting_foreground_threshold": alpha_matting_foreground_threshold,
             "alpha_matting_background_threshold": alpha_matting_background_threshold,
             "alpha_matting_erode_size": alpha_matting_erode_size
@@ -1023,38 +1073,38 @@ class ControlNetInterface:
         )
 
     def txt2img(
-            self,
-            prompt: str = "",
-            negative_prompt: str = "",
-            controlnet_input_image: [] = [],
-            controlnet_mask: [] = [],
-            controlnet_module: str = "",
-            controlnet_model: str = "",
-            controlnet_weight: float = 0.5,
-            controlnet_resize_mode: str = "Scale to Fit (Inner Fit)",
-            controlnet_lowvram: bool = False,
-            controlnet_processor_res: int = 512,
-            controlnet_threshold_a: int = 64,
-            controlnet_threshold_b: int = 64,
-            controlnet_guidance: float = 1.0,
-            enable_hr: bool = False,  # hiresfix
-            denoising_strength: float = 0.5,
-            hr_scale: float = 1.5,
-            hr_upscale: str = "Latent",
-            guess_mode: bool = True,
-            seed: int = -1,
-            subseed: int = -1,
-            subseed_strength: int = -1,
-            sampler_index: str = "Euler a",
-            batch_size: int = 1,
-            n_iter: int = 1,  # Iteration
-            steps: int = 20,
-            cfg_scale: float = 7,
-            width: int = 512,
-            height: int = 512,
-            restore_faces: bool = False,
-            override_settings: Dict[str, Any] = None,
-            override_settings_restore_afterwards: bool = True,
+        self,
+        prompt: str = "",
+        negative_prompt: str = "",
+        controlnet_input_image: [] = [],
+        controlnet_mask: [] = [],
+        controlnet_module: str = "",
+        controlnet_model: str = "",
+        controlnet_weight: float = 0.5,
+        controlnet_resize_mode: str = "Scale to Fit (Inner Fit)",
+        controlnet_lowvram: bool = False,
+        controlnet_processor_res: int = 512,
+        controlnet_threshold_a: int = 64,
+        controlnet_threshold_b: int = 64,
+        controlnet_guidance: float = 1.0,
+        enable_hr: bool = False,  # hiresfix
+        denoising_strength: float = 0.5,
+        hr_scale: float = 1.5,
+        hr_upscale: str = "Latent",
+        guess_mode: bool = True,
+        seed: int = -1,
+        subseed: int = -1,
+        subseed_strength: int = -1,
+        sampler_index: str = "Euler a",
+        batch_size: int = 1,
+        n_iter: int = 1,  # Iteration
+        steps: int = 20,
+        cfg_scale: float = 7,
+        width: int = 512,
+        height: int = 512,
+        restore_faces: bool = False,
+        override_settings: Dict[str, Any] = None,
+        override_settings_restore_afterwards: bool = True,
     ):
         if self.show_deprecation_warning:
             self.print_deprecation_warning()
@@ -1098,44 +1148,44 @@ class ControlNetInterface:
         return self.api.custom_post("controlnet/txt2img", payload=payload)
 
     def img2img(
-            self,
-            init_images: [] = [],
-            mask: str = None,
-            mask_blur: int = 30,
-            inpainting_fill: int = 0,
-            inpaint_full_res: bool = True,
-            inpaint_full_res_padding: int = 1,
-            inpainting_mask_invert: int = 1,
-            resize_mode: int = 0,
-            denoising_strength: float = 0.7,
-            prompt: str = "",
-            negative_prompt: str = "",
-            controlnet_input_image: [] = [],
-            controlnet_mask: [] = [],
-            controlnet_module: str = "",
-            controlnet_model: str = "",
-            controlnet_weight: float = 1.0,
-            controlnet_resize_mode: str = "Scale to Fit (Inner Fit)",
-            controlnet_lowvram: bool = False,
-            controlnet_processor_res: int = 512,
-            controlnet_threshold_a: int = 64,
-            controlnet_threshold_b: int = 64,
-            controlnet_guidance: float = 1.0,
-            guess_mode: bool = True,
-            seed: int = -1,
-            subseed: int = -1,
-            subseed_strength: int = -1,
-            sampler_index: str = "",
-            batch_size: int = 1,
-            n_iter: int = 1,  # Iteration
-            steps: int = 20,
-            cfg_scale: float = 7,
-            width: int = 512,
-            height: int = 512,
-            restore_faces: bool = False,
-            include_init_images: bool = True,
-            override_settings: Dict[str, Any] = None,
-            override_settings_restore_afterwards: bool = True,
+        self,
+        init_images: [] = [],
+        mask: str = None,
+        mask_blur: int = 30,
+        inpainting_fill: int = 0,
+        inpaint_full_res: bool = True,
+        inpaint_full_res_padding: int = 1,
+        inpainting_mask_invert: int = 1,
+        resize_mode: int = 0,
+        denoising_strength: float = 0.7,
+        prompt: str = "",
+        negative_prompt: str = "",
+        controlnet_input_image: [] = [],
+        controlnet_mask: [] = [],
+        controlnet_module: str = "",
+        controlnet_model: str = "",
+        controlnet_weight: float = 1.0,
+        controlnet_resize_mode: str = "Scale to Fit (Inner Fit)",
+        controlnet_lowvram: bool = False,
+        controlnet_processor_res: int = 512,
+        controlnet_threshold_a: int = 64,
+        controlnet_threshold_b: int = 64,
+        controlnet_guidance: float = 1.0,
+        guess_mode: bool = True,
+        seed: int = -1,
+        subseed: int = -1,
+        subseed_strength: int = -1,
+        sampler_index: str = "",
+        batch_size: int = 1,
+        n_iter: int = 1,  # Iteration
+        steps: int = 20,
+        cfg_scale: float = 7,
+        width: int = 512,
+        height: int = 512,
+        restore_faces: bool = False,
+        include_init_images: bool = True,
+        override_settings: Dict[str, Any] = None,
+        override_settings_restore_afterwards: bool = True,
     ):
         if self.show_deprecation_warning:
             self.print_deprecation_warning()
