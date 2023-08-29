@@ -11,8 +11,9 @@ from .webuiapi import (
     ControlNetInterface,
     ControlNetUnit,
     RemBGInterface,
-    ADetailer,    
-    Roop
+    ADetailer,
+    Roop,
+    ReActor,
 )
 
 __version__ = "0.9.5"
@@ -32,5 +33,5 @@ __all__ = [
     "RemBGInterface",
     "ADetailer",
     "Roop",
-    
+    "ReActor",
 ]
