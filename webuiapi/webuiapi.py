@@ -14,7 +14,7 @@ class Upscaler(str, Enum):
     Nearest = "Nearest"
     LDSR = "LDSR"
     BSRGAN = "BSRGAN"
-    ESRGAN_4x = "ESRGAN_4x"
+    ESRGAN_4x = "R-ESRGAN 4x+"
     R_ESRGAN_General_4xV3 = "R-ESRGAN General 4xV3"
     ScuNET_GAN = "ScuNET GAN"
     ScuNET_PSNR = "ScuNET PSNR"
@@ -31,7 +31,7 @@ class HiResUpscaler(str, Enum):
     LatentNearestExact = "Latent (nearist-exact)"
     Lanczos = "Lanczos"
     Nearest = "Nearest"
-    ESRGAN_4x = "ESRGAN_4x"
+    ESRGAN_4x = "R-ESRGAN 4x+"
     LDSR = "LDSR"
     ScuNET_GAN = "ScuNET GAN"
     ScuNET_PSNR = "ScuNET PSNR"
@@ -776,13 +776,7 @@ class WebUIApi:
             print("model not found")
 
     def util_get_current_model(self):
-        options = self.get_options()
-        if ("sd_model_checkpoint" in options):
-            return options["sd_model_checkpoint"]
-        else:
-            sd_models = self.get_sd_models()
-            sd_model = [model for model in sd_models if model["sha256"] == options["sd_checkpoint_hash"]]
-            return sd_model[0]["title"]
+        return self.get_options()["sd_model_checkpoint"]
 
     def util_wait_for_ready(self, check_interval=5.0):
         import time
