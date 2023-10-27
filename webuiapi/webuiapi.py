@@ -357,9 +357,11 @@ class WebUIApi:
     async def async_post(self, url, json):
         import aiohttp
 
+        infinite_timeout = aiohttp.ClientTimeout(total=None)
+
         async with aiohttp.ClientSession() as session:
             auth = aiohttp.BasicAuth(self.session.auth[0], self.session.auth[1]) if self.session.auth else None
-            async with session.post(url, json=json, auth=auth) as response:
+            async with session.post(url, json=json, auth=auth, timeout=infinite_timeout) as response: # infinite_timeout timeout here for timeout fix
                 return await self._to_api_result_async(response)
 
     def img2img(
