@@ -11,6 +11,13 @@ from .webuiapi import (
     ControlNetInterface,
     ControlNetUnit,
     RemBGInterface,
+    SegmentAnythingInterface,
+    SegmentAnythingSamResult,
+    SegmentAnythingDilationResult,
+    SegmentAnythingGinoResult,
+    SegmentAnythingControlNetSegRandomResult,
+    SegmentAnythingControlNetSegNotRandomResult,
+    SegmentAnythingSemanticSegWithCatIdResult
 )
 
 __version__ = "0.9.5"
@@ -28,4 +35,11 @@ __all__ = [
     "ControlNetInterface",
     "ControlNetUnit",
     "RemBGInterface",
+    "SegmentAnythingInterface",
+    "SegmentAnythingSamResult",
+    "SegmentAnythingDilationResult",
+    "SegmentAnythingGinoResult",
+    "SegmentAnythingControlNetSegRandomResult",
+    "SegmentAnythingControlNetSegNotRandomResult",
+    "SegmentAnythingSemanticSegWithCatIdResult"
 ]
