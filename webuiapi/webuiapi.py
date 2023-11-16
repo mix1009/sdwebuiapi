@@ -1077,9 +1077,9 @@ class ControlNetInterface:
 @dataclass
 class SegmentAnythingSamResult:
     message: Optional[str]
-    blended_images: list[Image.Image]
-    masks: list[Image.Image]
-    masked_images: list[Image.Image]
+    blended_images: List[Image.Image]
+    masks: List[Image.Image]
+    masked_images: List[Image.Image]
 
 
 @dataclass
@@ -1125,11 +1125,11 @@ class SegmentAnythingInterface:
     def __init__(self, webuiapi: WebUIApi):
         self.api = webuiapi
 
-    def heartbeat(self) -> dict[str, str]:
+    def heartbeat(self) -> Dict[str, str]:
         """Check if this extension is working."""
         return self.api.custom_get("sam/heartbeat")
 
-    def get_sam_models(self) -> list[str]:
+    def get_sam_models(self) -> List[str]:
         """Get available SAM models"""
         return self.api.custom_get("sam/sam-model")
 
