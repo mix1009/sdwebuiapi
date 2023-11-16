@@ -441,7 +441,7 @@ r.image
 ```python
 # https://github.com/continue-revolution/sd-webui-segment-anything
 
-segment = SegmentAnythingInterface(api)
+segment = webuiapi.SegmentAnythingInterface(api)
 
 # Perform a segmentation prediction using the SAM model using points
 sam_result = segment.sam_predict(
