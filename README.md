@@ -436,3 +436,39 @@ r = rembg.rembg(input_image=img, model='u2net', return_mask=False)
 r.image
 ```
 
+
+### Extension support - SegmentAnything (contributed by TimNekk)
+```python
+# https://github.com/continue-revolution/sd-webui-segment-anything
+
+segment = webuiapi.SegmentAnythingInterface(api)
+
+# Perform a segmentation prediction using the SAM model using points
+sam_result = segment.sam_predict(
+    image=img,
+    sam_positive_points=[(0.5, 0.25), (0.75, 0.75)],
+    # add other parameters as needed
+)
+
+# Perform a segmentation prediction using the SAM model using GroundingDINO
+sam_result2 = segment.sam_predict(
+    image=img,
+    dino_enabled=True,
+    dino_text_prompt="A text prompt for GroundingDINO",
+    # add other parameters as needed
+)
+
+# Example of dilating a mask
+dilation_result = segment.dilate_mask(
+    image=img,
+    mask=sam_result.masks[0],  # using the first mask from the SAM prediction
+    dilate_amount=30
+)
+
+# Example of generating semantic segmentation with category IDs
+semantic_seg_result = segment.sam_and_semantic_seg_with_cat_id(
+    image=img,
+    category="1+2+3",  # Category IDs separated by '+'
+    # add other parameters as needed
+)
+```

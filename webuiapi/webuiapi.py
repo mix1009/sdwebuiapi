@@ -7,7 +7,7 @@ import base64
 from PIL import Image, PngImagePlugin
 from dataclasses import dataclass
 from enum import Enum
-from typing import List, Dict, Any, Literal, Optional
+from typing import List, Dict, Any, Optional, Union ,Literal
 
 
 class Upscaler(str, Enum):
@@ -582,8 +582,9 @@ class WebUIApi:
         import aiohttp
 
         async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout()) as session:
+            infinite_timeout = aiohttp.ClientTimeout(total=None)
             auth = aiohttp.BasicAuth(self.session.auth[0], self.session.auth[1]) if self.session.auth else None
-            async with session.post(url, json=json, auth=auth) as response:
+            async with session.post(url, json=json, auth=auth, timeout=infinite_timeout) as response: # infinite_timeout timeout here for timeout fix
                 return await self._to_api_result_async(response)
 
     def img2img(
@@ -1307,3 +1308,395 @@ class ControlNetInterface:
     def model_list(self):
         r = self.api.custom_get("controlnet/model_list")
         return r["model_list"]
+
+
+# https://github.com/continue-revolution/sd-webui-segment-anything
+@dataclass
+class SegmentAnythingSamResult:
+    message: Optional[str]
+    blended_images: List[Image.Image]
+    masks: List[Image.Image]
+    masked_images: List[Image.Image]
+
+
+@dataclass
+class SegmentAnythingGinoResult:
+    message: str
+    image_with_box: Image.Image
+
+
+@dataclass
+class SegmentAnythingDilationResult:
+    blended_image: Image.Image
+    mask: Image.Image
+    masked_image: Image.Image
+
+
+@dataclass
+class SegmentAnythingControlNetSegNotRandomResult:
+    message: str
+    sem_presam: Image.Image
+    sem_postsam: Image.Image
+    blended_presam: Image.Image
+    blended_postsam: Image.Image
+
+
+@dataclass
+class SegmentAnythingControlNetSegRandomResult:
+    message: str
+    blended_image: Image.Image
+    random_seg: Image.Image
+    edit_anything_control: Image.Image
+
+
+@dataclass
+class SegmentAnythingSemanticSegWithCatIdResult:
+    message: str
+    blended_image: Image.Image
+    mask: Image.Image
+    masked_image: Image.Image
+    resized_input: Image.Image
+
+
+class SegmentAnythingInterface:
+    def __init__(self, webuiapi: WebUIApi):
+        self.api = webuiapi
+
+    def heartbeat(self) -> Dict[str, str]:
+        """Check if this extension is working."""
+        return self.api.custom_get("sam/heartbeat")
+
+    def get_sam_models(self) -> List[str]:
+        """Get available SAM models"""
+        return self.api.custom_get("sam/sam-model")
+
+    def sam_predict(
+            self,
+            image: Image,
+            sam_model_name: str = "sam_vit_h_4b8939.pth",
+            sam_positive_points: Optional[List[List[float]]] = None,
+            sam_negative_points: Optional[List[List[float]]] = None,
+            dino_enabled: bool = False,
+            dino_model_name: Optional[str] = "GroundingDINO_SwinT_OGC (694MB)",
+            dino_text_prompt: Optional[str] = None,
+            dino_box_threshold: Optional[float] = 0.3,
+            dino_preview_checkbox: bool = False,
+            dino_preview_boxes_selection: Optional[List[int]] = None
+    ) -> SegmentAnythingSamResult:
+        """
+        Get masks from SAM
+
+        :param image: Input image.
+        :param sam_model_name: SAM model name. You should manually download models before using them.
+        :param sam_positive_points: Positive point prompts in N * 2 python list.
+        :param sam_negative_points: Negative point prompts in N * 2 python list.
+        :param dino_enabled: Whether to use GroundingDINO to generate bounding boxes
+            from text to guide SAM to generate masks.
+        :param dino_model_name: Choose one of "GroundingDINO_SwinT_OGC (694MB)" and "GroundingDINO_SwinB (938MB)"
+            as your desired GroundingDINO model.
+        :param dino_text_prompt: Text prompt for GroundingDINO to generate bounding boxes.
+            Separate different categories with .
+        :param dino_box_threshold: Threshold for selecting bounding boxes. Do not use a very high value,
+            otherwise you may get no box.
+        :param dino_preview_checkbox: Whether to preview checkbox.
+            You can enable preview to select boxes you want if you have accessed API dino-predict
+        :param dino_preview_boxes_selection: Choose the boxes you want. Index start from 0.
+        """
+        payload = {
+            "input_image": raw_b64_img(image),
+            "sam_model_name": sam_model_name,
+            "sam_positive_points": sam_positive_points or [],
+            "sam_negative_points": sam_negative_points or [],
+            "dino_enabled": dino_enabled,
+            "dino_model_name": dino_model_name,
+            "dino_text_prompt": dino_text_prompt,
+            "dino_box_threshold": dino_box_threshold,
+            "dino_preview_checkbox": dino_preview_checkbox,
+            "dino_preview_boxes_selection": dino_preview_boxes_selection
+        }
+
+        url = self.api.get_endpoint("sam/sam-predict", baseurl=False)
+        r = self.api.session.post(url=url, json=payload).json()
+
+        return SegmentAnythingSamResult(
+            message=r.get("msg"),
+            blended_images=[Image.open(io.BytesIO(base64.b64decode(i))) for i in r["blended_images"]],
+            masks=[Image.open(io.BytesIO(base64.b64decode(i))) for i in r["masks"]],
+            masked_images=[Image.open(io.BytesIO(base64.b64decode(i))) for i in r["masked_images"]]
+        )
+
+    def dino_predict(
+            self,
+            image: Image,
+            text_prompt: str,
+            dino_model_name: str = "GroundingDINO_SwinT_OGC (694MB)",
+            box_threshold: float = 0.3
+    ) -> SegmentAnythingGinoResult:
+        """
+        Get bounding boxes from GroundingDINO
+
+        :param image: Input image.
+        :param text_prompt: Text prompt for GroundingDINO to generate bounding boxes.
+            Separate different categories with .
+        :param dino_model_name: Choose one of "GroundingDINO_SwinT_OGC (694MB)" and "GroundingDINO_SwinB (938MB)"
+            as your desired GroundingDINO model.
+        :param box_threshold: Threshold for selecting bounding boxes. Do not use a very high value,
+            otherwise you may get no box.
+        """
+        payload = {
+            "input_image": raw_b64_img(image),
+            "text_prompt": text_prompt,
+            "dino_model_name": dino_model_name,
+            "box_threshold": box_threshold
+        }
+
+        url = self.api.get_endpoint("sam/dino-predict", baseurl=False)
+        r = self.api.session.post(url=url, json=payload).json()
+
+        return SegmentAnythingGinoResult(
+            message=r.get("msg"),
+            image_with_box=Image.open(io.BytesIO(base64.b64decode(r["image_with_box"])))
+        )
+
+    def dilate_mask(
+            self,
+            image: Image,
+            mask: Image,
+            dilate_amount: int = 10
+    ) -> SegmentAnythingDilationResult:
+        """
+        Expand mask
+
+        :param image: Input image.
+        :param mask: Input mask.
+        :param dilate_amount: Mask expansion amount from 0 to 100.
+        """
+        payload = {
+            "input_image": raw_b64_img(image),
+            "mask": raw_b64_img(mask),
+            "dilate_amount": dilate_amount
+        }
+
+        url = self.api.get_endpoint("sam/dilate-mask", baseurl=False)
+        r = self.api.session.post(url=url, json=payload).json()
+
+        return SegmentAnythingDilationResult(
+            blended_image=Image.open(io.BytesIO(base64.b64decode(r["blended_image"]))),
+            mask=Image.open(io.BytesIO(base64.b64decode(r["mask"]))),
+            masked_image=Image.open(io.BytesIO(base64.b64decode(r["masked_image"])))
+        )
+
+    def generate_semantic_segmentation(
+            self,
+            image: Image,
+            sam_model_name: str = "sam_vit_h_4b8939.pth",
+            processor: str = "seg_ofade20k",
+            processor_res: int = 512,
+            pixel_perfect: bool = False,
+            resize_mode: Optional[int] = 1,
+            target_width: Optional[int] = None,
+            target_height: Optional[int] = None,
+            points_per_side: Optional[int] = 32,
+            points_per_batch: int = 64,
+            pred_iou_thresh: float = 0.88,
+            stability_score_thresh: float = 0.95,
+            stability_score_offset: float = 1.0,
+            box_nms_thresh: float = 0.7,
+            crop_n_layers: int = 0,
+            crop_nms_thresh: float = 0.7,
+            crop_overlap_ratio: float = 512 / 1500,
+            crop_n_points_downscale_factor: int = 1,
+            min_mask_region_area: int = 0
+    ) -> Union[SegmentAnythingControlNetSegNotRandomResult, SegmentAnythingControlNetSegRandomResult]:
+        """
+        Generate semantic segmentation enhanced by SAM.
+
+        :param image: Input image.
+        :param sam_model_name: SAM model name.
+        :param processor: Preprocessor for semantic segmentation, choose from one of "seg_ufade20k"
+            (uniformer trained on ade20k, performance really bad, can be greatly enhanced by SAM),
+            "seg_ofade20k" (oneformer trained on ade20k, performance far better than uniformer, can
+            be slightly improved by SAM), "seg_ofcoco" (oneformer trained on coco, similar to seg_ofade20k),
+            "random" (for EditAnything)
+        :param processor_res: Preprocessor resolution, range in (64, 2048].
+        :param pixel_perfect: Whether to enable pixel perfect. If enabled, target_W and target_H will be required,
+        and the processor resolution will be overridden by the optimal value.
+        :param resize_mode: Resize mode from the original shape to target shape,
+        only effective when pixel_perfect is enabled. 0: just resize, 1: crop and resize, 2: resize and fill
+        :param target_width: [Required if pixel_perfect is True] Target width if the segmentation will be used
+        to generate a new image.
+        :param target_height: [Required if pixel_perfect is True] Target height if the segmentation will be used
+        to generate a new image.
+        :param points_per_side: The number of points to be sampled
+            along one side of the image. The total number of points is
+            points_per_side**2. If None, 'point_grids' must provide explicit
+            point sampling.
+        :param points_per_batch: Sets the number of points run simultaneously
+            by the model. Higher numbers may be faster but use more GPU memory.
+        :param pred_iou_thresh: A filtering threshold in [0,1], using the
+            model's predicted mask quality.
+        :param stability_score_thresh: A filtering threshold in [0,1], using
+            the stability of the mask under changes to the cutoff used to binarize
+            the model's mask predictions.
+        :param stability_score_offset: The amount to shift the cutoff when
+            calculated the stability score.
+        :param box_nms_thresh: The box IoU cutoff used by non-maximal
+            suppression to filter duplicate masks.
+        :param crop_n_layers: If >0, mask prediction will be run again on
+            crops of the image. Sets the number of layers to run, where each
+            layer has 2**i_layer number of image crops.
+        :param crop_nms_thresh: The box IoU cutoff used by non-maximal
+            suppression to filter duplicate masks between different crops.
+        :param crop_overlap_ratio: Sets the degree to which crops overlap.
+            In the first crop layer, crops will overlap by this fraction of
+            the image length. Later layers with more crops scale down this overlap.
+        :param crop_n_points_downscale_factor: The number of points-per-side
+            sampled in layer n is scaled down by crop_n_points_downscale_factor**n.
+        :param min_mask_region_area: If >0, postprocessing will be applied
+            to remove disconnected regions and holes in masks with area smaller
+            than min_mask_region_area. Requires opencv.
+        """
+        payload = {
+            "input_image": raw_b64_img(image),
+            "sam_model_name": sam_model_name,
+            "processor": processor,
+            "processor_res": processor_res,
+            "pixel_perfect": pixel_perfect,
+            "resize_mode": resize_mode,
+            "target_W": target_width,
+            "target_H": target_height
+        }
+
+        autosam_conf = {
+            "points_per_side": points_per_side,
+            "points_per_batch": points_per_batch,
+            "pred_iou_thresh": pred_iou_thresh,
+            "stability_score_thresh": stability_score_thresh,
+            "stability_score_offset": stability_score_offset,
+            "box_nms_thresh": box_nms_thresh,
+            "crop_n_layers": crop_n_layers,
+            "crop_nms_thresh": crop_nms_thresh,
+            "crop_overlap_ratio": crop_overlap_ratio,
+            "crop_n_points_downscale_factor": crop_n_points_downscale_factor,
+            "min_mask_region_area": min_mask_region_area
+        }
+
+        url = self.api.get_endpoint("sam/controlnet-seg", baseurl=False)
+        r = self.api.session.post(url=url, json={"payload": payload, "autosam_conf": autosam_conf}).json()
+
+        if r.get("random_seg"):
+            return SegmentAnythingControlNetSegRandomResult(
+                message=r.get("msg"),
+                blended_image=Image.open(io.BytesIO(base64.b64decode(r["blended_image"]))),
+                random_seg=Image.open(io.BytesIO(base64.b64decode(r["random_seg"]))),
+                edit_anything_control=Image.open(io.BytesIO(base64.b64decode(r["edit_anything_control"])))
+            )
+        else:
+            return SegmentAnythingControlNetSegNotRandomResult(
+                message=r.get("msg"),
+                sem_presam=Image.open(io.BytesIO(base64.b64decode(r["sem_presam"]))),
+                sem_postsam=Image.open(io.BytesIO(base64.b64decode(r["sem_postsam"]))),
+                blended_presam=Image.open(io.BytesIO(base64.b64decode(r["blended_presam"]))),
+                blended_postsam=Image.open(io.BytesIO(base64.b64decode(r["blended_postsam"])))
+            )
+
+    def sam_and_semantic_seg_with_cat_id(
+            self,
+            image: Image,
+            category: str,
+            sam_model_name: str = "sam_vit_h_4b8939.pth",
+            processor: str = "seg_ofade20k",
+            processor_res: int = 512,
+            pixel_perfect: bool = False,
+            resize_mode: Optional[int] = 1,
+            target_width: Optional[int] = None,
+            target_height: Optional[int] = None,
+            points_per_side: Optional[int] = 32,
+            points_per_batch: int = 64,
+            pred_iou_thresh: float = 0.88,
+            stability_score_thresh: float = 0.95,
+            stability_score_offset: float = 1.0,
+            box_nms_thresh: float = 0.7,
+            crop_n_layers: int = 0,
+            crop_nms_thresh: float = 0.7,
+            crop_overlap_ratio: float = 512 / 1500,
+            crop_n_points_downscale_factor: int = 1,
+            min_mask_region_area: int = 0
+    ) -> SegmentAnythingSemanticSegWithCatIdResult:
+        """
+        Get masks generated by SAM + Semantic segmentation with category IDs.
+
+        :param image: Input image.
+        :param category: Category IDs separated by +.
+        :param sam_model_name: SAM model name.
+        :param processor: Preprocessor for semantic segmentation.
+        :param processor_res: Preprocessor resolution.
+        :param pixel_perfect: Whether to enable pixel perfect.
+        :param resize_mode: Resize mode from the original shape to target shape.
+        :param target_width: Target width if the segmentation will be used to generate a new image.
+        :param target_height: Target height if the segmentation will be used to generate a new image.
+        :param points_per_side: The number of points to be sampled
+            along one side of the image. The total number of points is
+            points_per_side**2. If None, 'point_grids' must provide explicit
+            point sampling.
+        :param points_per_batch: Sets the number of points run simultaneously
+            by the model. Higher numbers may be faster but use more GPU memory.
+        :param pred_iou_thresh: A filtering threshold in [0,1], using the
+            model's predicted mask quality.
+        :param stability_score_thresh: A filtering threshold in [0,1], using
+            the stability of the mask under changes to the cutoff used to binarize
+            the model's mask predictions.
+        :param stability_score_offset: The amount to shift the cutoff when
+            calculated the stability score.
+        :param box_nms_thresh: The box IoU cutoff used by non-maximal
+            suppression to filter duplicate masks.
+        :param crop_n_layers: If >0, mask prediction will be run again on
+            crops of the image. Sets the number of layers to run, where each
+            layer has 2**i_layer number of image crops.
+        :param crop_nms_thresh: The box IoU cutoff used by non-maximal
+            suppression to filter duplicate masks between different crops.
+        :param crop_overlap_ratio: Sets the degree to which crops overlap.
+            In the first crop layer, crops will overlap by this fraction of
+            the image length. Later layers with more crops scale down this overlap.
+        :param crop_n_points_downscale_factor: The number of points-per-side
+            sampled in layer n is scaled down by crop_n_points_downscale_factor**n.
+        :param min_mask_region_area: If >0, postprocessing will be applied
+            to remove disconnected regions and holes in masks with area smaller
+            than min_mask_region_area. Requires opencv.
+        """
+        payload = {
+            "input_image": raw_b64_img(image),
+            "category": category,
+            "sam_model_name": sam_model_name,
+            "processor": processor,
+            "processor_res": processor_res,
+            "pixel_perfect": pixel_perfect,
+            "resize_mode": resize_mode,
+            "target_W": target_width,
+            "target_H": target_height,
+        }
+
+        autosam_conf = {
+            "points_per_side": points_per_side,
+            "points_per_batch": points_per_batch,
+            "pred_iou_thresh": pred_iou_thresh,
+            "stability_score_thresh": stability_score_thresh,
+            "stability_score_offset": stability_score_offset,
+            "box_nms_thresh": box_nms_thresh,
+            "crop_n_layers": crop_n_layers,
+            "crop_nms_thresh": crop_nms_thresh,
+            "crop_overlap_ratio": crop_overlap_ratio,
+            "crop_n_points_downscale_factor": crop_n_points_downscale_factor,
+            "min_mask_region_area": min_mask_region_area
+        }
+
+        url = self.api.get_endpoint("sam/category-mask", baseurl=False)
+        r = self.api.session.post(url=url, json={"payload": payload, "autosam_conf": autosam_conf}).json()
+
+        return SegmentAnythingSemanticSegWithCatIdResult(
+            message=r.get("msg"),
+            blended_image=Image.open(io.BytesIO(base64.b64decode(r["blended_image"]))),
+            mask=Image.open(io.BytesIO(base64.b64decode(r["mask"]))),
+            masked_image=Image.open(io.BytesIO(base64.b64decode(r["masked_image"]))),
+            resized_input=Image.open(io.BytesIO(base64.b64decode(r["resized_input"])))
+        )

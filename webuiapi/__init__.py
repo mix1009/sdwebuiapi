@@ -14,9 +14,18 @@ from .webuiapi import (
     ADetailer,
     Roop,
     ReActor,
+    ADetailer,    
+    Roop
+    SegmentAnythingInterface,
+    SegmentAnythingSamResult,
+    SegmentAnythingDilationResult,
+    SegmentAnythingGinoResult,
+    SegmentAnythingControlNetSegRandomResult,
+    SegmentAnythingControlNetSegNotRandomResult,
+    SegmentAnythingSemanticSegWithCatIdResult
 )
 
-__version__ = "0.9.5"
+__version__ = "0.9.6"
 
 __all__ = [
     "__version__",
@@ -34,4 +43,11 @@ __all__ = [
     "ADetailer",
     "Roop",
     "ReActor",
+    "SegmentAnythingInterface",
+    "SegmentAnythingSamResult",
+    "SegmentAnythingDilationResult",
+    "SegmentAnythingGinoResult",
+    "SegmentAnythingControlNetSegRandomResult",
+    "SegmentAnythingControlNetSegNotRandomResult",
+    "SegmentAnythingSemanticSegWithCatIdResult"
 ]
