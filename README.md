@@ -472,3 +472,86 @@ semantic_seg_result = segment.sam_and_semantic_seg_with_cat_id(
     # add other parameters as needed
 )
 ```
+
+### Extension support - ADetailer (contributed by tomj2ee and davidmartinrius)
+#### txt2img with ADetailer
+```
+# https://github.com/Bing-su/adetailer
+
+import webuiapi
+
+api = webuiapi.WebUIApi()
+
+ads = webuiapi.ADetailer(ad_model="face_yolov8n.pt")
+
+result1 = api.txt2img(prompt="cute squirrel",
+                    negative_prompt="ugly, out of frame",
+                    seed=-1,
+                    styles=["anime"],
+                    cfg_scale=7,
+                    adetailer=[ads],
+                    steps=30,
+                    enable_hr=True,
+                    denoising_strength=0.5
+            )
+                    
+                    
+   
+img = result1.image
+img
+
+# OR
+
+file_path = "output_image.png"
+result1.image.save(file_path)
+```
+
+#### img2img with ADetailer
+
+```
+import webuiapi
+from PIL import Image
+
+img = Image.open("/path/to/your/image.jpg")
+
+ads = webuiapi.ADetailer(ad_model="face_yolov8n.pt")
+
+api = webuiapi.WebUIApi()
+
+result1 = api.img2img(
+    images=[img], 
+    prompt="a cute squirrel", 
+    steps=25, 
+    seed=-1, 
+    cfg_scale=7, 
+    denoising_strength=0.5, 
+    resize_mode=2,
+    width=512,
+    height=512,
+    adetailer=[ads],
+)
+
+file_path = "img2img_output_image.png"
+result1.image.save(file_path)
+```
+### Support for interrogate with "deepdanbooru / deepbooru" (contributed by davidmartinrius)
+
+```
+import webuiapi
+from PIL import Image
+
+api = webuiapi.WebUIApi()
+
+img = Image.open("/path/to/your/image.jpg")
+
+interrogate_result = api.interrogate(image=img, model="deepdanbooru")
+# also you can use clip. clip is set by default
+#interrogate_result = api.interrogate(image=img, model="clip")
+#interrogate_result = api.interrogate(image=img)
+
+prompt = interrogate_result.info
+prompt
+
+# OR
+print(prompt)
+```
