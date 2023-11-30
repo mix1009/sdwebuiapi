@@ -11,6 +11,9 @@ from .webuiapi import (
     ControlNetInterface,
     ControlNetUnit,
     RemBGInterface,
+    ADetailer,
+    Roop,
+    ReActor,
     ADetailer,    
     Roop
     SegmentAnythingInterface,
@@ -39,6 +42,7 @@ __all__ = [
     "RemBGInterface",
     "ADetailer",
     "Roop",
+    "ReActor",
     "SegmentAnythingInterface",
     "SegmentAnythingSamResult",
     "SegmentAnythingDilationResult",

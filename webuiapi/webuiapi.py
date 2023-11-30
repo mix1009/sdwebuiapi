@@ -249,6 +249,68 @@ class Roop:
             self.swap_in_source,
             self.swap_in_generated]
 
+class ReActor:
+    def __init__(self,
+                 img: PIL.Image ,
+                 enable: bool = True,
+                 source_faces_idnex: str = "0",
+                 target_faces_index: str = "0",
+                 model: str = None,
+                 face_restorer_name: str = "GFPGAN",
+                 face_restorer_visibility: float = 1,
+                 upscaler_name: str = "R-ESRGAN 4x+",
+                 restore_visibility: float = 1,
+                 restore_upscale: bool = True,
+                 upscaler: str = None,
+                 upscaler_scale: float = 1,
+                 upscaler_visibility: float = 1,
+                 swap_in_source: bool = False,
+                 swap_in_generated: bool = True,
+                 console_log_level: int = 1,
+                 gender_detection_source: int = 0, #14 Gender Detection (Source) (0 - No, 1 - Female Only, 2 - Male Only)
+                 gender_detection_target: int = 0, #14 Gender Detection (Target) (0 - No, 1 - Female Only, 2 - Male Only)
+                 ):
+        self.img = b64_img(img)
+        self.enable = enable
+        self.source_faces_idnex = source_faces_idnex
+        self.target_faces_index = target_faces_index
+        self.model = model
+        self.face_restorer_name = face_restorer_name
+        self.face_restorer_visibility = face_restorer_visibility
+        self.upscaler_name = upscaler_name
+        self.restore_visibility = restore_visibility
+        self.restore_upscale = restore_upscale
+        self.upscaler = upscaler
+        self.upscaler_scale = upscaler_scale
+        self.upscaler_visibility = upscaler_visibility
+        self.swap_in_source = swap_in_source
+        self.swap_in_generated = swap_in_generated
+        self.console_log_level = console_log_level
+        self.gender_detection_source = gender_detection_source
+        self.gender_detection_target = gender_detection_target
+
+    def to_dict(self):
+        return [
+            self.img,
+            self.enable,
+            self.source_faces_idnex,
+            self.target_faces_index,
+            self.model,
+            self.face_restorer_name,
+            self.face_restorer_visibility,
+            self.upscaler_name,
+            self.restore_visibility,
+            self.restore_upscale,
+            self.upscaler,
+            self.upscaler_scale,
+            self.upscaler_visibility,
+            self.swap_in_source,
+            self.swap_in_generated,
+            self.console_log_level,
+            self.gender_detection_source,
+            self.gender_detection_target,
+        ]
+
 
 
 def b64_img(image: Image) -> str:
@@ -414,6 +476,7 @@ class WebUIApi:
         controlnet_units: List[ControlNetUnit] = [],
         adetailer: List[ADetailer] = [],
         roop: Roop = None,
+        reactor: ReActor = None,
         sampler_index=None,  # deprecated: use sampler_name
         use_deprecated_controlnet=False,
         use_async=False,
@@ -483,9 +546,15 @@ class WebUIApi:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": ads
             }
+
         if roop :
             payload["alwayson_scripts"]["roop"] = {
                 "args": roop.to_dict()
+            }
+
+        if reactor :
+            payload["alwayson_scripts"]["reactor"] = {
+                "args": reactor.to_dict()
             }
 
         if controlnet_units and len(controlnet_units) > 0:
@@ -512,9 +581,8 @@ class WebUIApi:
     async def async_post(self, url, json):
         import aiohttp
 
-        infinite_timeout = aiohttp.ClientTimeout(total=None)
-
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(timeout=aiohttp.ClientTimeout()) as session:
+            infinite_timeout = aiohttp.ClientTimeout(total=None)
             auth = aiohttp.BasicAuth(self.session.auth[0], self.session.auth[1]) if self.session.auth else None
             async with session.post(url, json=json, auth=auth, timeout=infinite_timeout) as response: # infinite_timeout timeout here for timeout fix
                 return await self._to_api_result_async(response)
