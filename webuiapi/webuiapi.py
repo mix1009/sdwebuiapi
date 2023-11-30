@@ -117,6 +117,7 @@ class ADetailer:
                  ad_prompt: str = "",
                  ad_negative_prompt: str = "",
                  ad_confidence: float = 0.3,
+                 ad_mask_k_largest: float = 0.0,
                  ad_mask_min_ratio: float = 0.0,
                  ad_mask_max_ratio: float = 1.0,
                  ad_dilate_erode: int = 4,
@@ -138,6 +139,7 @@ class ADetailer:
                  # ad_sampler: str = "None",
                  ad_use_noise_multiplier: bool = False,
                  ad_noise_multiplier=1.0,
+                 ad_use_clip_skip: bool = False,
                  ad_clip_skip: int= 1,
                  ad_restore_face: bool = False,
                  ad_controlnet_model: str = "None",
@@ -145,12 +147,12 @@ class ADetailer:
                  ad_controlnet_weight: float = 1.0,
                  ad_controlnet_guidance_start: float = 0.0,
                  ad_controlnet_guidance_end: float = 1.0,
-                 is_api: bool = True
                  ):
         self.ad_model = ad_model
         self.ad_prompt = ad_prompt
         self.ad_negative_prompt = ad_negative_prompt
         self.ad_confidence = ad_confidence
+        self.ad_mask_k_largest = ad_mask_k_largest
         self.ad_mask_min_ratio = ad_mask_min_ratio
         self.ad_mask_max_ratio = ad_mask_max_ratio
         self.ad_dilate_erode = ad_dilate_erode
@@ -170,13 +172,15 @@ class ADetailer:
         self.ad_cfg_scale = ad_cfg_scale
         self.ad_use_noise_multiplier = ad_use_noise_multiplier
         self.ad_noise_multiplier = ad_noise_multiplier
+        self.ad_use_clip_skip = ad_use_clip_skip
+        self.ad_clip_skip = ad_clip_skip
         self.ad_restore_face = ad_restore_face
         self.ad_controlnet_model = ad_controlnet_model
         self.ad_controlnet_module = ad_controlnet_module
         self.ad_controlnet_weight = ad_controlnet_weight
         self.ad_controlnet_guidance_start = ad_controlnet_guidance_start
         self.ad_controlnet_guidance_end = ad_controlnet_guidance_end
-        self.is_api = is_api
+        
 
     def to_dict(self):
         return {
@@ -184,6 +188,7 @@ class ADetailer:
             "ad_prompt": self.ad_prompt,
             "ad_negative_prompt": self.ad_negative_prompt,
             "ad_confidence": self.ad_confidence,
+            "ad_mask_k_largest": self.ad_mask_k_largest,
             "ad_mask_min_ratio": self.ad_mask_min_ratio,
             "ad_mask_max_ratio": self.ad_mask_max_ratio,
             "ad_dilate_erode": self.ad_dilate_erode,
@@ -203,6 +208,8 @@ class ADetailer:
             "ad_cfg_scale": self.ad_cfg_scale,
             "ad_use_noise_multiplier": self.ad_use_noise_multiplier,
             "ad_noise_multiplier": self.ad_noise_multiplier,
+            "ad_use_clip_skip": self.ad_use_clip_skip,
+            "ad_clip_skip": self.ad_clip_skip,
             "ad_restore_face": self.ad_restore_face,
             "ad_controlnet_model": self.ad_controlnet_model,
             "ad_controlnet_module": self.ad_controlnet_module,
