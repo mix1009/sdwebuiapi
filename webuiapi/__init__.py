@@ -15,7 +15,7 @@ from .webuiapi import (
     Roop,
     ReActor,
     ADetailer,    
-    Roop
+    Roop,
     SegmentAnythingInterface,
     SegmentAnythingSamResult,
     SegmentAnythingDilationResult,
