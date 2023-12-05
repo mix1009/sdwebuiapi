@@ -259,65 +259,86 @@ class Roop:
 
 class ReActor:
     def __init__(self,
-                 img: PIL.Image ,
-                 enable: bool = True,
-                 source_faces_idnex: str = "0",
-                 target_faces_index: str = "0",
-                 model: str = None,
-                 face_restorer_name: str = "GFPGAN",
-                 face_restorer_visibility: float = 1,
-                 upscaler_name: str = "R-ESRGAN 4x+",
-                 restore_visibility: float = 1,
-                 restore_upscale: bool = True,
-                 upscaler: str = None,
-                 upscaler_scale: float = 1,
-                 upscaler_visibility: float = 1,
-                 swap_in_source: bool = False,
-                 swap_in_generated: bool = True,
-                 console_log_level: int = 1,
-                 gender_detection_source: int = 0, #14 Gender Detection (Source) (0 - No, 1 - Female Only, 2 - Male Only)
-                 gender_detection_target: int = 0, #14 Gender Detection (Target) (0 - No, 1 - Female Only, 2 - Male Only)
-                 ):
+                img: PIL.Image, #0
+                enable: bool = True,  #1 Enable ReActor
+                source_faces_index: str = "0", #2 Comma separated face number(s) from swap-source image
+                faces_index: str = "0", #3 Comma separated face number(s) for target image (result)
+                model: str = 'inswapper_128.onnx', # None, #4 model path
+                face_restorer_name: str = "CodeFormer", #4 Restore Face: None; CodeFormer; GFPGAN
+                face_restorer_visibility: float = 1, #5 Restore visibility value
+                restore_first: bool = True,  #7 Restore face -> Upscale
+                upscaler_name: str =  "R-ESRGAN 4x+",# None, # "R-ESRGAN 4x+", #8 Upscaler (type 'None' if doesn't need), see full list here: http://127.0.0.1:7860/sdapi/v1/script-info -> reactor -> sec.8
+                upscaler_scale: int = 2,#9 Upscaler scale value
+                upscaler_visibility: float = 1,
+                swap_in_source: bool = False,
+                swap_in_generated: bool = True,
+                console_logging_level: int = 1, #13 Console Log Level (0 - min, 1 - med or 2 - max)
+                gender_source: int = 0, #14 Gender Detection (Source) (0 - No, 1 - Female Only, 2 - Male Only)
+                gender_target: int = 0, #14 Gender Detection (Target) (0 - No, 1 - Female Only, 2 - Male Only)
+                save_original: bool = False,
+                codeFormer_weight: float = 0.5,
+                source_hash_check: bool = True,
+                target_hash_check: bool = False,
+                device: str = "CUDA", #or CPU
+                mask_face: bool = True,
+                select_source: int = 0, #IMPORTANT. MUST BE 0 or faceswap won't work
+                face_model: str = None,
+    ):
+        
         self.img = b64_img(img)
-        self.enable = enable
-        self.source_faces_idnex = source_faces_idnex
-        self.target_faces_index = target_faces_index
-        self.model = model
-        self.face_restorer_name = face_restorer_name
-        self.face_restorer_visibility = face_restorer_visibility
-        self.upscaler_name = upscaler_name
-        self.restore_visibility = restore_visibility
-        self.restore_upscale = restore_upscale
-        self.upscaler = upscaler
+        self.enable = enable 
+        self.source_faces_index = source_faces_index 
+        self.faces_index = faces_index 
+        self.model = model 
+        self.face_restorer_name = face_restorer_name 
+        self.face_restorer_visibility = face_restorer_visibility 
+        self.restore_first = restore_first 
+        self.upscaler_name = upscaler_name 
         self.upscaler_scale = upscaler_scale
-        self.upscaler_visibility = upscaler_visibility
-        self.swap_in_source = swap_in_source
-        self.swap_in_generated = swap_in_generated
-        self.console_log_level = console_log_level
-        self.gender_detection_source = gender_detection_source
-        self.gender_detection_target = gender_detection_target
+        self.upscaler_visibility = upscaler_visibility 
+        self.swap_in_source = swap_in_source 
+        self.swap_in_generated = swap_in_generated 
+        self.console_logging_level = console_logging_level 
+        self.gender_source = gender_source 
+        self.gender_target = gender_target 
+        self.save_original = save_original 
+        self.codeFormer_weight = codeFormer_weight 
+        self.source_hash_check = source_hash_check 
+        self.target_hash_check = target_hash_check 
+        self.device = device 
+        self.mask_face = mask_face 
+        self.select_source = select_source 
+        self.face_model = face_model 
 
     def to_dict(self):
+        
         return [
             self.img,
             self.enable,
-            self.source_faces_idnex,
-            self.target_faces_index,
+            self.source_faces_index,
+            self.faces_index,
             self.model,
             self.face_restorer_name,
             self.face_restorer_visibility,
+            self.restore_first,
             self.upscaler_name,
-            self.restore_visibility,
-            self.restore_upscale,
-            self.upscaler,
             self.upscaler_scale,
             self.upscaler_visibility,
             self.swap_in_source,
             self.swap_in_generated,
-            self.console_log_level,
-            self.gender_detection_source,
-            self.gender_detection_target,
+            self.console_logging_level,
+            self.gender_source,
+            self.gender_target,
+            self.save_original,
+            self.codeFormer_weight,
+            self.source_hash_check,
+            self.target_hash_check,
+            self.device,
+            self.mask_face,
+            self.select_source,
+            self.face_model,
         ]
+
 
 
 
@@ -644,6 +665,7 @@ class WebUIApi:
         controlnet_units: List[ControlNetUnit] = [],
         adetailer: List[ADetailer] = [],
         roop: Roop = None,
+        reactor: ReActor = None,
         use_deprecated_controlnet=False,
         use_async=False,
     ):
@@ -722,6 +744,11 @@ class WebUIApi:
                 "args": roop.to_dict()
             }
 
+        if reactor:
+            payload["alwayson_scripts"]["reactor"] = {
+                "args": reactor.to_dict()
+            }
+            
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
                 "args": [x.to_dict() for x in controlnet_units]
