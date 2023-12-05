@@ -555,3 +555,37 @@ prompt
 # OR
 print(prompt)
 ```
+
+### Support for ReActor, for face swapping (contributed by davidmartinrius)
+
+```
+import webuiapi
+from PIL import Image
+
+img = Image.open("/path/to/your/image.jpg")
+
+api = webuiapi.WebUIApi()
+
+your_desired_face = Image.open("/path/to/your/desired/face.jpeg")
+
+reactor = webuiapi.ReActor(
+    img=your_desired_face,
+    enable=True
+)
+
+result1 = api.img2img(
+    images=[img], 
+    prompt="a cute squirrel", 
+    steps=25, 
+    seed=-1, 
+    cfg_scale=7, 
+    denoising_strength=0.5, 
+    resize_mode=2,
+    width=512,
+    height=512,
+    reactor=reactor
+)
+
+file_path = "face_swapped_image.png"
+result1.image.save(file_path)
+```
