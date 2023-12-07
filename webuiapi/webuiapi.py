@@ -783,7 +783,6 @@ class WebUIApi:
             sd_models = self.get_sd_models()
             sd_model = [model for model in sd_models if model["sha256"] == options["sd_checkpoint_hash"]]
             return sd_model[0]["title"]
-        return self.get_options()["sd_model_checkpoint"]
 
     def util_wait_for_ready(self, check_interval=5.0):
         import time
