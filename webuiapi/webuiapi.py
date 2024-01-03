@@ -29,8 +29,8 @@ class HiResUpscaler(str, Enum):
     LatentAntialiased = "Latent (antialiased)"
     LatentBicubic = "Latent (bicubic)"
     LatentBicubicAntialiased = "Latent (bicubic antialiased)"
-    LatentNearest = "Latent (nearist)"
-    LatentNearestExact = "Latent (nearist-exact)"
+    LatentNearest = "Latent (nearest)"
+    LatentNearestExact = "Latent (nearest-exact)"
     Lanczos = "Lanczos"
     Nearest = "Nearest"
     ESRGAN_4x = "R-ESRGAN 4x+"
@@ -64,12 +64,13 @@ class ControlNetUnit:
         processor_res: int = 512,
         threshold_a: float = 64,
         threshold_b: float = 64,
-        guidance: float = 1.0,
+        guidance: float = None, # deprecated: use guidance_end
         guidance_start: float = 0.0,
         guidance_end: float = 1.0,
         control_mode: int = 0,
         pixel_perfect: bool = False,
         guessmode: int = None,  # deprecated: use control_mode
+        hr_option: str = "Both", # Both, Low res only, High res only
     ):
         self.input_image = input_image
         self.mask = mask
@@ -81,9 +82,13 @@ class ControlNetUnit:
         self.processor_res = processor_res
         self.threshold_a = threshold_a
         self.threshold_b = threshold_b
-        self.guidance = guidance
         self.guidance_start = guidance_start
         self.guidance_end = guidance_end
+        if guidance:
+            print(
+                "ControlNetUnit guidance is deprecated. Please use guidance_end instead."
+            )
+            self.guidance_end = guidance
         if guessmode:
             print(
                 "ControlNetUnit guessmode is deprecated. Please use control_mode instead."
@@ -91,6 +96,7 @@ class ControlNetUnit:
             control_mode = guessmode
         self.control_mode = control_mode
         self.pixel_perfect = pixel_perfect
+        self.hr_option = hr_option
 
     def to_dict(self):
         return {
@@ -104,11 +110,12 @@ class ControlNetUnit:
             "processor_res": self.processor_res,
             "threshold_a": self.threshold_a,
             "threshold_b": self.threshold_b,
-            "guidance": self.guidance,
+            "guidance": self.guidance_end,
             "guidance_start": self.guidance_start,
             "guidance_end": self.guidance_end,
             "control_mode": self.control_mode,
             "pixel_perfect": self.pixel_perfect,
+            "hr_option": self.hr_option,
         }
 
 class ADetailer:
