@@ -582,6 +582,10 @@ class WebUIApi:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": ads
             }
+        else:
+            payload["alwayson_scripts"]["ADetailer"] = {
+                "args": [False]
+            }
 
         if roop :
             payload["alwayson_scripts"]["roop"] = {
