@@ -371,6 +371,7 @@ def raw_b64_img(image: Image) -> str:
 
 class WebUIApi:
     has_controlnet = False
+    has_adetailer = False
 
     def __init__(
         self,
@@ -398,7 +399,12 @@ class WebUIApi:
         if username and password:
             self.set_auth(username, password)
         else:
-            self.check_controlnet()
+            self.check_extensions()
+
+
+    def check_extensions(self):
+        self.check_controlnet()
+        self.check_adetailer()
 
     def check_controlnet(self):
         try:
@@ -407,9 +413,16 @@ class WebUIApi:
         except:
             pass
 
+    def check_adetailer(self):
+        try:
+            scripts = self.get_scripts()
+            self.has_adetailer = "adetailer" in scripts["txt2img"]
+        except:
+            pass
+
     def set_auth(self, username, password):
         self.session.auth = (username, password)
-        self.check_controlnet()
+        self.check_extensions()
 
     def _to_api_result(self, response):
         if response.status_code != 200:
@@ -582,7 +595,7 @@ class WebUIApi:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": ads
             }
-        else:
+        elif self.has_adetailer:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": [False]
             }
@@ -750,6 +763,11 @@ class WebUIApi:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": ads
             }
+        elif self.has_adetailer:
+            payload["alwayson_scripts"]["ADetailer"] = {
+                "args": [False]
+            }
+
         if roop :
             payload["alwayson_scripts"]["roop"] = {
                 "args": roop.to_dict()
