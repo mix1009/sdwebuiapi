@@ -94,7 +94,16 @@ class ControlNetUnit:
                 "ControlNetUnit guessmode is deprecated. Please use control_mode instead."
             )
             control_mode = guessmode
-        self.control_mode = control_mode
+
+        if control_mode == 0:
+            self.control_mode = 'Balanced',
+        elif control_mode == 1:
+            self.control_mode = 'My prompt is more important'
+        elif control_mode == 2:
+            self.control_mode = 'ControlNet is more important'
+        else:
+            self.control_mode = control_mode
+
         self.pixel_perfect = pixel_perfect
         self.hr_option = hr_option
 
