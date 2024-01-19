@@ -355,6 +355,23 @@ class ReActor:
             self.face_model,
         ]
 
+class Sag:
+    def __init__(self,
+                enable: bool = True,  #1 Enable Sag
+                scale: float = 0.75,
+                mask_threshold: float = 1.00
+    ):
+        self.enable = enable
+        self.scale = scale
+        self.mask_threshold = mask_threshold
+
+    def to_dict(self):
+        
+        return [
+            self.enable,
+            self.codeFormer_weight,
+            self.codeFormer_weight,
+        ]
 
 
 
@@ -535,6 +552,7 @@ class WebUIApi:
         adetailer: List[ADetailer] = [],
         roop: Roop = None,
         reactor: ReActor = None,
+        sag: Sag = None,
         sampler_index=None,  # deprecated: use sampler_name
         use_deprecated_controlnet=False,
         use_async=False,
@@ -619,6 +637,12 @@ class WebUIApi:
                 "args": reactor.to_dict()
             }
 
+        if sag :
+            payload["alwayson_scripts"]["Self Attention Guidance"] = {
+                "args": sag.to_dict()
+            }
+
+
         if controlnet_units and len(controlnet_units) > 0:
             payload["alwayson_scripts"]["ControlNet"] = {
                 "args": [x.to_dict() for x in controlnet_units]
@@ -699,6 +723,7 @@ class WebUIApi:
         adetailer: List[ADetailer] = [],
         roop: Roop = None,
         reactor: ReActor = None,
+        sag: Sag = None,
         use_deprecated_controlnet=False,
         use_async=False,
     ):
@@ -785,6 +810,11 @@ class WebUIApi:
         if reactor:
             payload["alwayson_scripts"]["reactor"] = {
                 "args": reactor.to_dict()
+            }
+        
+        if sag:
+            payload["alwayson_scripts"]["Self Attention Guidance"] = {
+                "args": sag.to_dict()
             }
             
         if controlnet_units and len(controlnet_units) > 0:
