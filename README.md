@@ -589,3 +589,41 @@ result1 = api.img2img(
 file_path = "face_swapped_image.png"
 result1.image.save(file_path)
 ```
+
+
+### Support for Self Attention Guidance (contributed by yano)
+
+https://github.com/ashen-sensored/sd_webui_SAG
+
+```
+import webuiapi
+from PIL import Image
+
+img = Image.open("/path/to/your/image.jpg")
+
+api = webuiapi.WebUIApi()
+
+your_desired_face = Image.open("/path/to/your/desired/face.jpeg")
+
+sag = webuiapi.Sag(
+    enable=True,
+    scale=0.75,
+    mask_threshold=1.00
+)
+
+result1 = api.img2img(
+    images=[img], 
+    prompt="a cute squirrel", 
+    steps=25, 
+    seed=-1, 
+    cfg_scale=7, 
+    denoising_strength=0.5, 
+    resize_mode=2,
+    width=512,
+    height=512,
+    sag=sag
+)
+
+file_path = "face_swapped_image.png"
+result1.image.save(file_path)
+```
