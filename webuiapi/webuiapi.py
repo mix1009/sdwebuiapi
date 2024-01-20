@@ -369,8 +369,8 @@ class Sag:
         
         return [
             self.enable,
-            self.codeFormer_weight,
-            self.codeFormer_weight,
+            self.scale,
+            self.mask_threshold,
         ]
 
 
