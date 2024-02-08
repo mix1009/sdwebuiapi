@@ -70,7 +70,6 @@ class ControlNetUnit:
         control_mode: int = 0,
         pixel_perfect: bool = False,
         guessmode: int = None,  # deprecated: use control_mode
-        hr_option: str = "Both", # Both, Low res only, High res only
     ):
         self.input_image = input_image
         self.mask = mask
@@ -105,7 +104,6 @@ class ControlNetUnit:
             self.control_mode = control_mode
 
         self.pixel_perfect = pixel_perfect
-        self.hr_option = hr_option
 
     def to_dict(self):
         return {
@@ -124,7 +122,6 @@ class ControlNetUnit:
             "guidance_end": self.guidance_end,
             "control_mode": self.control_mode,
             "pixel_perfect": self.pixel_perfect,
-            "hr_option": self.hr_option,
         }
 
 class ADetailer:
