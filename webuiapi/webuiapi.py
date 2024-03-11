@@ -413,10 +413,13 @@ class WebUIApi:
         if baseurl is None:
             if use_https:
                 baseurl = f"https://{host}:{port}/sdapi/v1"
+                unofficial_baseurl = f"https://{host}:{port}"
             else:
                 baseurl = f"http://{host}:{port}/sdapi/v1"
+                unofficial_baseurl = f"http://{host}:{port}"
 
         self.baseurl = baseurl
+        self.unofficial_baseurl = unofficial_baseurl
         self.default_sampler = sampler
         self.default_steps = steps
 
@@ -939,7 +942,47 @@ class WebUIApi:
 
         response = self.session.post(url=f"{self.baseurl}/interrogate", json=payload)
         return self._to_api_result(response)
+        
+    def list_prompt_gen_models(self):
+        
+        print("CALLING list_prompt_gen_models", f"{self.unofficial_baseurl}/promptgen/list_models")
+        response = self.session.get(url=f"{self.unofficial_baseurl}/promptgen/list_models")
+        return response.json()['available_models']
 
+    def prompt_gen(self, 
+        model_name: str = "AUTOMATIC/promptgen-lexart",
+        batch_count: int = 1,
+        batch_size: int = 10,
+        text: str = "",
+        min_length: int = 20,
+        max_length: int = 150,
+        num_beams: int = 1,
+        temperature: float = 1,
+        repetition_penalty: float = 1,
+        length_preference: float = 1,
+        sampling_mode: str = "Top K",
+        top_k: float = 12,
+        top_p: float = 0.15,
+    ):
+        payload = {
+            "model_name": model_name,
+            "batch_count": batch_count,
+            "batch_size": batch_size,
+            "text": text,
+            "min_length": min_length,
+            "max_length": max_length,
+            "num_beams": num_beams,
+            "temperature": temperature,
+            "repetition_penalty": repetition_penalty,
+            "length_preference": length_preference,
+            "sampling_mode": sampling_mode,
+            "top_k": top_k,
+            "top_p": top_p
+        }
+
+        response = self.session.post(url=f"{self.unofficial_baseurl}/promptgen/generate", json=payload)
+        return response.json()['prompts']
+    
     def interrupt(self):
         response = self.session.post(url=f"{self.baseurl}/interrupt")
         return response.json()
