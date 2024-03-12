@@ -627,3 +627,62 @@ result1 = api.img2img(
 file_path = "face_swapped_image.png"
 result1.image.save(file_path)
 ```
+
+### Prompt generator API by [David Martin Rius](https://github.com/davidmartinrius/):
+
+
+This is an unofficial implementation to use the api of promptgen. 
+Before installing the extension you have to check if you already have an extension called Promptgen. If so, you need to uninstall it.
+Once uninstalled you can install it in two ways:
+
+#### 1. From the user interface
+![image](https://github.com/davidmartinrius/sdwebuiapi/assets/16558194/d879719f-bb9f-44a7-aef7-b893d117bbea)
+
+#### 2. From the command line
+
+cd stable-diffusion-webui/extensions
+
+git clone -b api-implementation https://github.com/davidmartinrius/stable-diffusion-webui-promptgen.git
+
+Once installed:
+```
+api = webuiapi.WebUIApi()
+
+result = api.list_prompt_gen_models()
+print("list of models")
+print(result)
+# you will get something like this:
+#['AUTOMATIC/promptgen-lexart', 'AUTOMATIC/promptgen-majinai-safe', 'AUTOMATIC/promptgen-majinai-unsafe']
+
+text = "a box"
+
+To create a prompt from a text:
+# by default model_name is "AUTOMATIC/promptgen-lexart"
+result = api.prompt_gen(text=text)
+
+# Using a different model
+result = api.prompt_gen(text=text, model_name="AUTOMATIC/promptgen-majinai-unsafe")
+
+#Complete usage
+result =  api.prompt_gen(
+        text=text, 
+        model_name="AUTOMATIC/promptgen-majinai-unsafe",
+        batch_count= 1,
+        batch_size=10,
+        min_length=20,
+        max_length=150,
+        num_beams=1,
+        temperature=1,
+        repetition_penalty=1,
+        length_preference=1,
+        sampling_mode="Top K",
+        top_k=12,
+        top_p=0.15
+    )
+
+# result is a list of prompts. You can iterate the list or just get the first result like this: result[0]
+
+```
+
+
+
