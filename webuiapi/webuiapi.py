@@ -45,6 +45,7 @@ class WebUIApiResult:
     images: list
     parameters: dict
     info: dict
+    json: dict
 
     @property
     def image(self):
@@ -413,13 +414,10 @@ class WebUIApi:
         if baseurl is None:
             if use_https:
                 baseurl = f"https://{host}:{port}/sdapi/v1"
-                unofficial_baseurl = f"https://{host}:{port}"
             else:
                 baseurl = f"http://{host}:{port}/sdapi/v1"
-                unofficial_baseurl = f"http://{host}:{port}"
 
         self.baseurl = baseurl
-        self.unofficial_baseurl = unofficial_baseurl
         self.default_sampler = sampler
         self.default_steps = steps
 
@@ -479,7 +477,7 @@ class WebUIApi:
         if "parameters" in r.keys():
             parameters = r["parameters"]
 
-        return WebUIApiResult(images, parameters, info)
+        return WebUIApiResult(images, parameters, info, r)
 
     async def _to_api_result_async(self, response):
         if response.status != 200:
@@ -507,7 +505,7 @@ class WebUIApi:
         if "parameters" in r.keys():
             parameters = r["parameters"]
 
-        return WebUIApiResult(images, parameters, info)
+        return WebUIApiResult(images, parameters, info, r)
 
     def txt2img(
         self,
@@ -944,10 +942,8 @@ class WebUIApi:
         return self._to_api_result(response)
         
     def list_prompt_gen_models(self):
-        
-        print("CALLING list_prompt_gen_models", f"{self.unofficial_baseurl}/promptgen/list_models")
-        response = self.session.get(url=f"{self.unofficial_baseurl}/promptgen/list_models")
-        return response.json()['available_models']
+        r = self.custom_get("promptgen/list_models")
+        return r['available_models']
 
     def prompt_gen(self, 
         model_name: str = "AUTOMATIC/promptgen-lexart",
@@ -980,8 +976,8 @@ class WebUIApi:
             "top_p": top_p
         }
 
-        response = self.session.post(url=f"{self.unofficial_baseurl}/promptgen/generate", json=payload)
-        return response.json()['prompts']
+        r = self.custom_post("promptgen/generate", payload=payload) 
+        return r.json['prompts']
     
     def interrupt(self):
         response = self.session.post(url=f"{self.baseurl}/interrupt")
