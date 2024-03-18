@@ -97,7 +97,7 @@ class ControlNetUnit:
             control_mode = guessmode
 
         if control_mode == 0:
-            self.control_mode = 'Balanced',
+            self.control_mode = 'Balanced'
         elif control_mode == 1:
             self.control_mode = 'My prompt is more important'
         elif control_mode == 2:
