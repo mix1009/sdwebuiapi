@@ -224,11 +224,14 @@ XYZPlotAvailableImg2ImgScripts = [
 
 # Example call
 XAxisType = "Steps"
-XAxisValues = "20,30" 
+XAxisValues = "20,30"
+XAxisValuesDropdown = ""
 YAxisType = "Sampler"
 YAxisValues = "Euler a, LMS"
+YAxisValuesDropdown = ""
 ZAxisType = "Nothing"
 ZAxisValues = ""
+ZAxisValuesDropdown = ""
 drawLegend = "True"
 includeLoneImages = "False"
 includeSubGrids = "False"
@@ -245,10 +248,13 @@ result = api.txt2img(
                     script_args=[
                         XYZPlotAvailableTxt2ImgScripts.index(XAxisType),
                         XAxisValues,
+                        XAxisValuesDropdown,
                         XYZPlotAvailableTxt2ImgScripts.index(YAxisType),
                         YAxisValues,
+                        YAxisValuesDropdown,
                         XYZPlotAvailableTxt2ImgScripts.index(ZAxisType),
                         ZAxisValues,
+                        ZAxisValuesDropdown,
                         drawLegend,
                         includeLoneImages,
                         includeSubGrids,
