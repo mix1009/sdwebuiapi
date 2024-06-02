@@ -393,7 +393,7 @@ def raw_b64_img(image: Image) -> str:
 
 
 class WebUIApi:
-    has_controlnet = True
+    has_controlnet = False
     has_adetailer = False
 
     def __init__(
