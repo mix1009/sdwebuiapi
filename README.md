@@ -385,7 +385,7 @@ img
 
 ```
 # txt2img with ControlNet (used 1.0 but also supports 1.1)
-unit1 = webuiapi.ControlNetUnit(input_image=img, module='canny', model='control_canny-fp16 [e3fe7712]')
+unit1 = webuiapi.ControlNetUnit(image=img, module='canny', model='control_v11p_sd15_canny [d14c016b]')
 
 r = api.txt2img(prompt="photo of a beautiful girl", controlnet_units=[unit1])
 r.image
@@ -396,8 +396,8 @@ r.image
 
 ```
 # img2img with multiple ControlNets (used 1.0 but also supports 1.1)
-unit1 = webuiapi.ControlNetUnit(input_image=img, module='canny', model='control_canny-fp16 [e3fe7712]')
-unit2 = webuiapi.ControlNetUnit(input_image=img, module='depth', model='control_depth-fp16 [400750f6]', weight=0.5)
+unit1 = webuiapi.ControlNetUnit(image=img, module='canny', model='control_v11p_sd15_canny [d14c016b]')
+unit2 = webuiapi.ControlNetUnit(image=img, module='depth', model='control_v11f1p_sd15_depth [cfd03158]', weight=0.5)
 
 r2 = api.img2img(prompt="girl",
             images=[img], 
