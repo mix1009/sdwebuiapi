@@ -55,41 +55,37 @@ class WebUIApiResult:
 class ControlNetUnit:
     def __init__(
         self,
-        input_image: Image = None,
+        image: Image = None,
         mask: Image = None,
         module: str = "none",
         model: str = "None",
         weight: float = 1.0,
         resize_mode: str = "Resize and Fill",
-        lowvram: bool = False,
+        low_vram: bool = False,
         processor_res: int = 512,
         threshold_a: float = 64,
         threshold_b: float = 64,
-        guidance: float = None, # deprecated: use guidance_end
         guidance_start: float = 0.0,
         guidance_end: float = 1.0,
         control_mode: int = 0,
         pixel_perfect: bool = False,
         guessmode: int = None,  # deprecated: use control_mode
         hr_option: str = "Both", # Both, Low res only, High res only
+        enabled: bool = True,
     ):
-        self.input_image = input_image
+        self.image = image
         self.mask = mask
         self.module = module
         self.model = model
         self.weight = weight
         self.resize_mode = resize_mode
-        self.lowvram = lowvram
+        self.low_vram = low_vram
         self.processor_res = processor_res
         self.threshold_a = threshold_a
         self.threshold_b = threshold_b
         self.guidance_start = guidance_start
         self.guidance_end = guidance_end
-        if guidance:
-            print(
-                "ControlNetUnit guidance is deprecated. Please use guidance_end instead."
-            )
-            self.guidance_end = guidance
+        self.enabled = enabled
         if guessmode:
             print(
                 "ControlNetUnit guessmode is deprecated. Please use control_mode instead."
@@ -110,22 +106,22 @@ class ControlNetUnit:
 
     def to_dict(self):
         return {
-            "input_image": raw_b64_img(self.input_image) if self.input_image else "",
+            "image": raw_b64_img(self.image) if self.image else "",
             "mask": raw_b64_img(self.mask) if self.mask is not None else None,
             "module": self.module,
             "model": self.model,
             "weight": self.weight,
             "resize_mode": self.resize_mode,
-            "lowvram": self.lowvram,
+            "low_vram": self.low_vram,
             "processor_res": self.processor_res,
             "threshold_a": self.threshold_a,
             "threshold_b": self.threshold_b,
-            "guidance": self.guidance_end,
             "guidance_start": self.guidance_start,
             "guidance_end": self.guidance_end,
             "control_mode": self.control_mode,
             "pixel_perfect": self.pixel_perfect,
             "hr_option": self.hr_option,
+            "enabled": self.enabled,
         }
 
 class ADetailer:
@@ -1112,10 +1108,10 @@ class WebUIApi:
     def controlnet_detect(
         self, images, module="none", processor_res=512, threshold_a=64, threshold_b=64
     ):
-        input_images = [b64_img(x) for x in images]
+        images = [b64_img(x) for x in images]
         payload = {
             "controlnet_module": module,
-            "controlnet_input_images": input_images,
+            "controlnet_images": images,
             "controlnet_processor_res": processor_res,
             "controlnet_threshold_a": threshold_a,
             "controlnet_threshold_b": threshold_b,
@@ -1252,7 +1248,7 @@ class RemBGInterface:
 
     def rembg(
         self,
-        input_image: str = "", #image string (?)
+        image: str = "", #image string (?)
         model: str = 'u2net',  #[None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
         return_mask: bool = False,
         alpha_matting: bool = False,
@@ -1262,7 +1258,7 @@ class RemBGInterface:
     ):
 
         payload = {
-            "input_image": b64_img(input_image),
+            "image": b64_img(image),
             "model": model,
             "return_mask": return_mask,
             "alpha_matting":  alpha_matting,
@@ -1288,13 +1284,13 @@ class ControlNetInterface:
         self,
         prompt: str = "",
         negative_prompt: str = "",
-        controlnet_input_image: [] = [],
+        controlnet_image: [] = [],
         controlnet_mask: [] = [],
         controlnet_module: str = "",
         controlnet_model: str = "",
         controlnet_weight: float = 0.5,
         controlnet_resize_mode: str = "Scale to Fit (Inner Fit)",
-        controlnet_lowvram: bool = False,
+        controlnet_low_vram: bool = False,
         controlnet_processor_res: int = 512,
         controlnet_threshold_a: int = 64,
         controlnet_threshold_b: int = 64,
@@ -1321,23 +1317,22 @@ class ControlNetInterface:
         if self.show_deprecation_warning:
             self.print_deprecation_warning()
 
-        controlnet_input_image_b64 = [raw_b64_img(x) for x in controlnet_input_image]
+        controlnet_image_b64 = [raw_b64_img(x) for x in controlnet_image]
         controlnet_mask_b64 = [raw_b64_img(x) for x in controlnet_mask]
 
         payload = {
             "prompt": prompt,
             "negative_prompt": negative_prompt,
-            "controlnet_input_image": controlnet_input_image_b64,
+            "controlnet_image": controlnet_image_b64,
             "controlnet_mask": controlnet_mask_b64,
             "controlnet_module": controlnet_module,
             "controlnet_model": controlnet_model,
             "controlnet_weight": controlnet_weight,
             "controlnet_resize_mode": controlnet_resize_mode,
-            "controlnet_lowvram": controlnet_lowvram,
+            "controlnet_low_vram": controlnet_low_vram,
             "controlnet_processor_res": controlnet_processor_res,
             "controlnet_threshold_a": controlnet_threshold_a,
             "controlnet_threshold_b": controlnet_threshold_b,
-            "controlnet_guidance": controlnet_guidance,
             "enable_hr": enable_hr,
             "denoising_strength": denoising_strength,
             "hr_scale": hr_scale,
@@ -1372,17 +1367,16 @@ class ControlNetInterface:
         denoising_strength: float = 0.7,
         prompt: str = "",
         negative_prompt: str = "",
-        controlnet_input_image: [] = [],
+        controlnet_image: [] = [],
         controlnet_mask: [] = [],
         controlnet_module: str = "",
         controlnet_model: str = "",
         controlnet_weight: float = 1.0,
         controlnet_resize_mode: str = "Scale to Fit (Inner Fit)",
-        controlnet_lowvram: bool = False,
+        controlnet_low_vram: bool = False,
         controlnet_processor_res: int = 512,
         controlnet_threshold_a: int = 64,
         controlnet_threshold_b: int = 64,
-        controlnet_guidance: float = 1.0,
         guess_mode: bool = True,
         seed: int = -1,
         subseed: int = -1,
@@ -1403,7 +1397,7 @@ class ControlNetInterface:
             self.print_deprecation_warning()
 
         init_images_b64 = [raw_b64_img(x) for x in init_images]
-        controlnet_input_image_b64 = [raw_b64_img(x) for x in controlnet_input_image]
+        controlnet_image_b64 = [raw_b64_img(x) for x in controlnet_image]
         controlnet_mask_b64 = [raw_b64_img(x) for x in controlnet_mask]
 
         payload = {
@@ -1418,17 +1412,16 @@ class ControlNetInterface:
             "denoising_strength": denoising_strength,
             "prompt": prompt,
             "negative_prompt": negative_prompt,
-            "controlnet_input_image": controlnet_input_image_b64,
+            "controlnet_image": controlnet_image_b64,
             "controlnet_mask": controlnet_mask_b64,
             "controlnet_module": controlnet_module,
             "controlnet_model": controlnet_model,
             "controlnet_weight": controlnet_weight,
             "controlnet_resize_mode": controlnet_resize_mode,
-            "controlnet_lowvram": controlnet_lowvram,
+            "controlnet_low_vram": controlnet_low_vram,
             "controlnet_processor_res": controlnet_processor_res,
             "controlnet_threshold_a": controlnet_threshold_a,
             "controlnet_threshold_b": controlnet_threshold_b,
-            "controlnet_guidance": controlnet_guidance,
             "guess_mode": guess_mode,
             "seed": seed,
             "subseed": subseed,
@@ -1545,7 +1538,7 @@ class SegmentAnythingInterface:
         :param dino_preview_boxes_selection: Choose the boxes you want. Index start from 0.
         """
         payload = {
-            "input_image": raw_b64_img(image),
+            "image": raw_b64_img(image),
             "sam_model_name": sam_model_name,
             "sam_positive_points": sam_positive_points or [],
             "sam_negative_points": sam_negative_points or [],
@@ -1586,7 +1579,7 @@ class SegmentAnythingInterface:
             otherwise you may get no box.
         """
         payload = {
-            "input_image": raw_b64_img(image),
+            "image": raw_b64_img(image),
             "text_prompt": text_prompt,
             "dino_model_name": dino_model_name,
             "box_threshold": box_threshold
@@ -1614,7 +1607,7 @@ class SegmentAnythingInterface:
         :param dilate_amount: Mask expansion amount from 0 to 100.
         """
         payload = {
-            "input_image": raw_b64_img(image),
+            "image": raw_b64_img(image),
             "mask": raw_b64_img(mask),
             "dilate_amount": dilate_amount
         }
@@ -1699,7 +1692,7 @@ class SegmentAnythingInterface:
             than min_mask_region_area. Requires opencv.
         """
         payload = {
-            "input_image": raw_b64_img(image),
+            "image": raw_b64_img(image),
             "sam_model_name": sam_model_name,
             "processor": processor,
             "processor_res": processor_res,
@@ -1807,7 +1800,7 @@ class SegmentAnythingInterface:
             than min_mask_region_area. Requires opencv.
         """
         payload = {
-            "input_image": raw_b64_img(image),
+            "image": raw_b64_img(image),
             "category": category,
             "sam_model_name": sam_model_name,
             "processor": processor,
