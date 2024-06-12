@@ -402,6 +402,7 @@ class WebUIApi:
         port=7860,
         baseurl=None,
         sampler="Euler a",
+        scheduler="automatic",
         steps=20,
         use_https=False,
         username=None,
@@ -415,6 +416,7 @@ class WebUIApi:
 
         self.baseurl = baseurl
         self.default_sampler = sampler
+        self.default_scheduler = scheduler
         self.default_steps = steps
 
         self.session = requests.Session()
@@ -522,6 +524,7 @@ class WebUIApi:
         seed_resize_from_h=0,
         seed_resize_from_w=0,
         sampler_name=None,  # use this instead of sampler_index
+        scheduler=None,
         batch_size=1,
         n_iter=1,
         steps=None,
@@ -558,6 +561,10 @@ class WebUIApi:
             sampler_index = self.default_sampler
         if sampler_name is None:
             sampler_name = self.default_sampler
+
+        if scheduler is None:
+            scheduler = self.default_scheduler
+
         if steps is None:
             steps = self.default_steps
         if script_args is None:
@@ -598,6 +605,7 @@ class WebUIApi:
             "override_settings": override_settings,
             "override_settings_restore_afterwards": override_settings_restore_afterwards,
             "sampler_name": sampler_name,
+            "scheduler": scheduler,
             "sampler_index": sampler_index,
             "script_name": script_name,
             "script_args": script_args,
@@ -691,6 +699,7 @@ class WebUIApi:
         seed_resize_from_h=0,
         seed_resize_from_w=0,
         sampler_name=None,  # use this instead of sampler_index
+        scheduler=None,
         batch_size=1,
         n_iter=1,
         steps=None,
@@ -728,6 +737,8 @@ class WebUIApi:
             sampler_name = self.default_sampler
         if sampler_index is None:
             sampler_index = self.default_sampler
+        if scheduler is None:
+            scheduler = self.default_scheduler
         if steps is None:
             steps = self.default_steps
         if script_args is None:
@@ -770,6 +781,7 @@ class WebUIApi:
             "override_settings": override_settings,
             "override_settings_restore_afterwards": override_settings_restore_afterwards,
             "sampler_name": sampler_name,
+            "scheduler": scheduler,
             "sampler_index": sampler_index,
             "include_init_images": include_init_images,
             "script_name": script_name,
@@ -1006,6 +1018,9 @@ class WebUIApi:
     def get_samplers(self):
         response = self.session.get(url=f"{self.baseurl}/samplers")
         return response.json()
+    
+    def get_sampler_names(self):
+        return sorted([s['name'] for s in self.get_samplers()])
 
     def get_sd_vae(self):
         response = self.session.get(url=f"{self.baseurl}/sd-vae")
@@ -1066,6 +1081,13 @@ class WebUIApi:
     def get_memory(self):
         response = self.session.get(url=f"{self.baseurl}/memory")
         return response.json()
+    
+    def get_schedulers(self):
+        response = self.session.get(url=f"{self.baseurl}/schedulers")
+        return response.json()
+
+    def get_scheduler_names(self):
+        return sorted([s['name'] for s in self.get_schedulers()])
 
     def get_endpoint(self, endpoint, baseurl):
         if baseurl:
