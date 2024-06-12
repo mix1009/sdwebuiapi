@@ -290,6 +290,7 @@ api.get_progress()
 api.get_embeddings()
 api.get_cmd_flags()
 api.get_scripts()
+api.get_schedulers()
 api.get_memory()
 
 # misc apis
@@ -304,6 +305,12 @@ old_model = api.util_get_current_model()
 
 # get list of available models
 models = api.util_get_model_names()
+
+# get list of available samplers
+api.util_get_sampler_names()
+
+# get list of available schedulers
+api.util_get_scheduler_names()
 
 # refresh list of models
 api.refresh_checkpoints()

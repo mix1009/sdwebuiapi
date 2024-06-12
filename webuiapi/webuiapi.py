@@ -1019,9 +1019,6 @@ class WebUIApi:
         response = self.session.get(url=f"{self.baseurl}/samplers")
         return response.json()
     
-    def get_sampler_names(self):
-        return sorted([s['name'] for s in self.get_samplers()])
-
     def get_sd_vae(self):
         response = self.session.get(url=f"{self.baseurl}/sd-vae")
         return response.json()
@@ -1086,9 +1083,6 @@ class WebUIApi:
         response = self.session.get(url=f"{self.baseurl}/schedulers")
         return response.json()
 
-    def get_scheduler_names(self):
-        return sorted([s['name'] for s in self.get_schedulers()])
-
     def get_endpoint(self, endpoint, baseurl):
         if baseurl:
             return f"{self.baseurl}/{endpoint}"
@@ -1143,6 +1137,12 @@ class WebUIApi:
 
     def util_get_model_names(self):
         return sorted([x["title"] for x in self.get_sd_models()])
+    
+    def util_get_sampler_names(self):
+        return sorted([s['name'] for s in self.get_samplers()])
+
+    def util_get_scheduler_names(self):
+        return sorted([s['name'] for s in self.get_schedulers()])
 
     def util_set_model(self, name, find_closest=True):
         if find_closest:
