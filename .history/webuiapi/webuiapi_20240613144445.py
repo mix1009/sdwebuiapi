@@ -401,7 +401,6 @@ class WebUIApi:
         host="127.0.0.1",
         port=7860,
         baseurl=None,
-        taggerurl=None,
         sampler="Euler a",
         scheduler="automatic",
         steps=20,
@@ -414,15 +413,8 @@ class WebUIApi:
                 baseurl = f"https://{host}:{port}/sdapi/v1"
             else:
                 baseurl = f"http://{host}:{port}/sdapi/v1"
-                
-        if taggerurl is None:
-            if use_https:
-                taggerurl = f"https://{host}:{port}/tagger/v1"
-            else:
-                taggerurl = f"http://{host}:{port}/tagger/v1"
 
         self.baseurl = baseurl
-        self.taggerurl = taggerurl
         self.default_sampler = sampler
         self.default_scheduler = scheduler
         self.default_steps = steps
@@ -956,20 +948,6 @@ class WebUIApi:
 
         response = self.session.post(url=f"{self.baseurl}/interrogate", json=payload)
         return self._to_api_result(response)
-    
-    def WD14_interrogate(self, image, model="wd14-vit-v2-git",threshold=0.35):
-        payload = {
-            "image": b64_img(image) if isinstance(image, Image.Image) else image,
-            "model": model,
-            'threshold':threshold,
-        }
-
-        response = self.session.post(url=f"{self.taggerurl}/interrogate", json=payload)
-        return self._to_api_result(response)
-    
-    def WD14_interrogators(self):
-        response = self.session.get(url=f"{self.taggerurl}/interrogators")
-        return response.json()
         
     def list_prompt_gen_models(self):
         r = self.custom_get("promptgen/list_models")
