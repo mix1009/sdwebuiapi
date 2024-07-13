@@ -1560,7 +1560,7 @@ class SegmentAnythingInterface:
         :param dino_preview_boxes_selection: Choose the boxes you want. Index start from 0.
         """
         payload = {
-            "image": raw_b64_img(image),
+            "input_image": raw_b64_img(image),
             "sam_model_name": sam_model_name,
             "sam_positive_points": sam_positive_points or [],
             "sam_negative_points": sam_negative_points or [],
@@ -1601,7 +1601,7 @@ class SegmentAnythingInterface:
             otherwise you may get no box.
         """
         payload = {
-            "image": raw_b64_img(image),
+            "input_image": raw_b64_img(image),
             "text_prompt": text_prompt,
             "dino_model_name": dino_model_name,
             "box_threshold": box_threshold
@@ -1629,7 +1629,7 @@ class SegmentAnythingInterface:
         :param dilate_amount: Mask expansion amount from 0 to 100.
         """
         payload = {
-            "image": raw_b64_img(image),
+            "input_image": raw_b64_img(image),
             "mask": raw_b64_img(mask),
             "dilate_amount": dilate_amount
         }
@@ -1714,7 +1714,7 @@ class SegmentAnythingInterface:
             than min_mask_region_area. Requires opencv.
         """
         payload = {
-            "image": raw_b64_img(image),
+            "input_image": raw_b64_img(image),
             "sam_model_name": sam_model_name,
             "processor": processor,
             "processor_res": processor_res,
@@ -1822,7 +1822,7 @@ class SegmentAnythingInterface:
             than min_mask_region_area. Requires opencv.
         """
         payload = {
-            "image": raw_b64_img(image),
+            "input_image": raw_b64_img(image),
             "category": category,
             "sam_model_name": sam_model_name,
             "processor": processor,
