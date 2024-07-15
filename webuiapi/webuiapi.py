@@ -1270,7 +1270,7 @@ class RemBGInterface:
 
     def rembg(
         self,
-        image: str = "", #image string (?)
+        input_image: str = "", #image string (?)
         model: str = 'u2net',  #[None, 'u2net', 'u2netp', 'u2net_human_seg', 'u2net_cloth_seg','silueta','isnet-general-use','isnet-anime']
         return_mask: bool = False,
         alpha_matting: bool = False,
@@ -1280,7 +1280,7 @@ class RemBGInterface:
     ):
 
         payload = {
-            "image": b64_img(image),
+            "input_image": b64_img(input_image),
             "model": model,
             "return_mask": return_mask,
             "alpha_matting":  alpha_matting,
