@@ -231,6 +231,102 @@ class ADetailer:
             "ad_controlnet_guidance_end": self.ad_controlnet_guidance_end,
         }
 
+class AnimateDiff:
+    def __init__(self,
+                 model="mm_sd15_v3.safetensors",
+                 enable=True,
+                 video_length=0,
+                 fps=8,
+                 loop_number=0, #  Display loop number
+                 closed_loop='R-P', # Closed loop, 'N' | 'R-P' | 'R+P' | 'A'
+                 batch_size=16,
+                 stride=1,
+                 overlap=-1,
+                 format=['GIF'], # 'GIF' | 'MP4' | 'PNG' | 'WEBP' | 'WEBM' | 'TXT' | 'Frame'
+                 interp='Off', # Frame interpolation, 'Off' | 'FILM'
+                 interp_x=10, # Interp X
+                 video_source=None,
+                 video_path='',
+                 mask_path='',
+                 freeinit_enable=False,
+                 freeinit_filter="butterworth",
+                 freeinit_ds=0.25,
+                 freeinit_dt=0.25,
+                 freeinit_iters=3,
+                 latent_power=1,
+                 latent_scale=32,
+                 last_frame=None,
+                 latent_power_last=1,
+                 latent_scale_last=32,
+                 request_id = '',
+                 ):
+                self.model = model
+                self.enable = enable
+                self.video_length = video_length
+                self.fps = fps
+                self.loop_number = loop_number
+                self.closed_loop = closed_loop
+                self.batch_size = batch_size
+                self.stride = stride
+                self.overlap = overlap
+                self.format = format
+                self.interp = interp
+                self.interp_x = interp_x
+                self.video_source = video_source
+                self.video_path = video_path
+                self.mask_path = mask_path
+                self.freeinit_enable = freeinit_enable
+                self.freeinit_filter = freeinit_filter
+                self.freeinit_ds = freeinit_ds
+                self.freeinit_dt = freeinit_dt
+                self.freeinit_iters = freeinit_iters
+                self.latent_power = latent_power
+                self.latent_scale = latent_scale
+                self.last_frame = last_frame
+                self.latent_power_last = latent_power_last
+                self.latent_scale_last = latent_scale_last
+                self.request_id = request_id
+
+
+
+    def to_dict(self, is_img2img=False):
+        infotext = {
+            "model": self.model,
+            "enable": self.enable,
+            "video_length": self.video_length,
+            "format": self.format,
+            "fps": self.fps,
+            "loop_number": self.loop_number,
+            "closed_loop": self.closed_loop,
+            "batch_size": self.batch_size,
+            "stride": self.stride,
+            "overlap": self.overlap,
+            "interp": self.interp,
+            "interp_x": self.interp_x,
+            "freeinit_enable": self.freeinit_enable,
+            "freeinit_filter": self.freeinit_filter,
+            "freeinit_ds": self.freeinit_ds,
+            "freeinit_dt": self.freeinit_dt,
+            "freeinit_iters": self.freeinit_iters,
+        }
+        if self.request_id:
+            infotext['request_id'] = self.request_id
+        if self.last_frame:
+            infotext['last_frame'] = self.last_frame
+        if len(self.video_path) > 0:
+            infotext['video_path'] = self.video_path
+        if len(self.mask_path) > 0:
+            infotext['mask_path'] = self.mask_path
+
+        if is_img2img:
+            infotext.update({
+                "latent_power": self.latent_power,
+                "latent_scale": self.latent_scale,
+                "latent_power_last": self.latent_power_last,
+                "latent_scale_last": self.latent_scale_last,
+            })
+
+        return infotext
 
 class Roop:
     def __init__(self, img: PIL.Image ,
@@ -395,6 +491,7 @@ def raw_b64_img(image: Image) -> str:
 class WebUIApi:
     has_controlnet = False
     has_adetailer = False
+    has_animatediff = False
 
     def __init__(
         self,
@@ -428,22 +525,15 @@ class WebUIApi:
 
 
     def check_extensions(self):
-        self.check_controlnet()
-        self.check_adetailer()
-
-    def check_controlnet(self):
         try:
             scripts = self.get_scripts()
             self.has_controlnet = "controlnet m2m" in scripts["txt2img"]
+            self.has_adetailer = "adetailer" in scripts["txt2img"]
+            self.has_animatediff = "animatediff" in scripts["txt2img"]
+
         except:
             pass
 
-    def check_adetailer(self):
-        try:
-            scripts = self.get_scripts()
-            self.has_adetailer = "adetailer" in scripts["txt2img"]
-        except:
-            pass
 
     def set_auth(self, username, password):
         self.session.auth = (username, password)
@@ -550,6 +640,7 @@ class WebUIApi:
         alwayson_scripts={},
         controlnet_units: List[ControlNetUnit] = [],
         adetailer: List[ADetailer] = [],
+        animatediff: AnimateDiff = None,
         roop: Roop = None,
         reactor: ReActor = None,
         sag: Sag = None,
@@ -630,6 +721,15 @@ class WebUIApi:
         elif self.has_adetailer:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": [False]
+            }
+
+        if animatediff:
+            payload["alwayson_scripts"]["animatediff"] = {
+                "args": [animatediff.to_dict(False)]
+            }
+        elif self.has_animatediff:
+            payload["alwayson_scripts"]["animatediff"] = {
+                "args": [False],
             }
 
         if roop :
@@ -727,6 +827,7 @@ class WebUIApi:
         alwayson_scripts={},
         controlnet_units: List[ControlNetUnit] = [],
         adetailer: List[ADetailer] = [],
+        animatediff: AnimateDiff = None,
         roop: Roop = None,
         reactor: ReActor = None,
         sag: Sag = None,
@@ -809,6 +910,15 @@ class WebUIApi:
         elif self.has_adetailer:
             payload["alwayson_scripts"]["ADetailer"] = {
                 "args": [False]
+            }
+
+        if animatediff:
+            payload["alwayson_scripts"]["animatediff"] = {
+                "args": [animatediff.to_dict(True)]
+            }
+        elif self.has_animatediff:
+            payload["alwayson_scripts"]["animatediff"] = {
+                "args": [False],
             }
 
         if roop :
