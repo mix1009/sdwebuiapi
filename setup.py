@@ -11,11 +11,11 @@ long_description = (here / "README.md").read_text(encoding="utf-8")
 
 setup(
     name="webuiapi",
-    version="0.9.14",
+    version="0.9.15",
     description="Python API client for AUTOMATIC1111/stable-diffusion-webui",
     url="https://github.com/mix1009/sdwebuiapi",
     author="ChunKoo Park",
-    author_email="mix1009@gmail.com",
+    author_email="mix100f9@gmail.com",
     keywords="stable-diffuion-webui, AUTOMATIC1111, stable-diffusion, api",
     packages=["webuiapi"],
     #packages=find_packages(),

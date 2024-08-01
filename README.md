@@ -442,6 +442,25 @@ r.image
 ```
 
 
+### Extension support - AnimateDiff
+
+```
+# https://github.com/continue-revolution/sd-webui-animatediff
+adiff = webuiapi.AnimateDiff(model='mm_sd15_v3.safetensors',
+                             video_length=24,
+                             closed_loop='R+P',
+                             format=['GIF'])
+
+r = api.txt2img(prompt='cute puppy', animatediff=adiff)
+
+# save GIF file. need save_all=True to save animated GIF.
+r.image.save('puppy.gif', save_all=True)
+
+# Display animated GIF in Jupyter notebook
+from IPython.display import HTML
+HTML('<img src="data:image/gif;base64,{0}"/>'.format(r.json['images'][0]))
+```
+
 ### Extension support - RemBG (contributed by webcoderz)
 ```
 # https://github.com/AUTOMATIC1111/stable-diffusion-webui-rembg
