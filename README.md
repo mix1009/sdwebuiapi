@@ -717,5 +717,65 @@ result =  api.prompt_gen(
 
 ```
 
+### TIPS for using Flux [David Martin Rius](https://github.com/davidmartinrius/):
+
+In both cases, it is needed cfg_scale = 1, sampler_name = "Euler", scheduler = "Simple" and in txt2img enable_hr=False
+
+## For txt2img
+```
+import webuiapi
+
+result1 = api.txt2img(prompt="cute squirrel",
+                    negative_prompt="ugly, out of frame",
+                    seed=-1,
+                    styles=["anime"],
+                    cfg_scale=1,
+                    steps=20,
+                    enable_hr=False,
+                    denoising_strength=0.5,
+                    sampler_name= "Euler",
+                    scheduler= "Simple"
+            )
+                    
+                    
+   
+img = result1.image
+img
+
+# OR
+
+file_path = "output_image.png"
+result1.image.save(file_path)
+
+```
+
+## For img2img
+
+```
+import webuiapi
+from PIL import Image
+
+img = Image.open("/path/to/your/image.jpg")
+
+api = webuiapi.WebUIApi()
+
+result1 = api.img2img(
+    images=[img], 
+    prompt="a cute squirrel", 
+    steps=20, 
+    seed=-1, 
+    cfg_scale=1, 
+    denoising_strength=0.5, 
+    resize_mode=2,
+    width=512,
+    height=512,
+    sampler_name= "Euler",
+    scheduler= "Simple"
+)
+
+file_path = "face_swapped_image.png"
+result1.image.save(file_path)
+
+```
 
 
