@@ -608,6 +608,9 @@ class WebUIApi:
         hr_resize_y=0,
         hr_prompt="",
         hr_negative_prompt="",
+        hr_checkpoint_name = ""
+        hr_sampler_name = ""
+        hr_scheduler = ""
         prompt="",
         styles=[],
         seed=-1,
@@ -671,6 +674,9 @@ class WebUIApi:
             "hr_resize_y": hr_resize_y,
             "hr_prompt": hr_prompt,
             "hr_negative_prompt": hr_negative_prompt,
+            "hr_checkpoint_name": hr_checkpoint_name,
+            "hr_sampler_name": hr_sampler_name,
+            "hr_scheduler": hr_scheduler,
             "denoising_strength": denoising_strength,
             "firstphase_width": firstphase_width,
             "firstphase_height": firstphase_height,
