@@ -342,6 +342,28 @@ r = api.txt2img(prompt='photo of a cute girl with green hair <lora:Moxin_10:0.6>
                )
 r.image
 ```
+The args and kwargs parameters will be used directly if script implements 
+```
+    def process(self, p: StableDiffusionProcessing, *args, **kwargs):
+```
+method.
+Please see extension script's ui() method. 
+
+If Extension defines ui as follows:
+```
+    def ui(self, is_img2img):
+      ...
+      return [enabled]
+```
+Then the following setup is required:
+```
+r = api.txt2img(prompt='photo of a cute girl with green hair',
+                seed=1000,
+                save_images=True,
+                alwayson_scripts={"script-name":{"args" : [True]}} # check script name with self.get_scripts() method, and required arguments from get_scripts_info() method. You have to fill all required "args" which is original return value of Scripts.ui method.
+               )
+r.image
+```
 
 ### Extension support - Model-Keyword
 ```
