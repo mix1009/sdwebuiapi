@@ -127,6 +127,8 @@ class ControlNetUnit:
 class ADetailer:
     def __init__(self,
                  ad_model: str = "None",
+                 ad_model_classes: str = "",
+                 ad_tab_enable: bool = True,
                  ad_prompt: str = "",
                  ad_negative_prompt: str = "",
                  ad_confidence: float = 0.3,
@@ -148,8 +150,13 @@ class ADetailer:
                  ad_steps: int = 28,
                  ad_use_cfg_scale: bool = False,
                  ad_cfg_scale: float = 7.0,
-                 # ad_use_sampler: bool = False,
-                 # ad_sampler: str = "None",
+                 ad_use_checkpoint: bool = False,
+                 ad_checkpoint: str = None,
+                 ad_use_vae: bool = False,
+                 ad_vae: str = None,
+                 ad_use_sampler: bool = False,
+                 ad_sampler: str = "DPM++ 2M Karras",
+                 ad_scheduler: str = "Use same scheduler",
                  ad_use_noise_multiplier: bool = False,
                  ad_noise_multiplier=1.0,
                  ad_use_clip_skip: bool = False,
@@ -162,6 +169,8 @@ class ADetailer:
                  ad_controlnet_guidance_end: float = 1.0,
                  ):
         self.ad_model = ad_model
+        self.ad_model_classes = ad_model_classes
+        self.ad_tab_enable = ad_tab_enable
         self.ad_prompt = ad_prompt
         self.ad_negative_prompt = ad_negative_prompt
         self.ad_confidence = ad_confidence
@@ -183,6 +192,13 @@ class ADetailer:
         self.ad_steps = ad_steps
         self.ad_use_cfg_scale = ad_use_cfg_scale
         self.ad_cfg_scale = ad_cfg_scale
+        self.ad_use_checkpoint = ad_use_checkpoint
+        self.ad_checkpoint = ad_checkpoint
+        self.ad_use_vae = ad_use_vae
+        self.ad_vae = ad_vae
+        self.ad_use_sampler = ad_use_sampler
+        self.ad_sampler = ad_sampler
+        self.ad_scheduler = ad_scheduler
         self.ad_use_noise_multiplier = ad_use_noise_multiplier
         self.ad_noise_multiplier = ad_noise_multiplier
         self.ad_use_clip_skip = ad_use_clip_skip
@@ -198,6 +214,8 @@ class ADetailer:
     def to_dict(self):
         return {
             "ad_model": self.ad_model,
+            "ad_model_classes": self.ad_model_classes,
+            "ad_tab_enable" : self.ad_tab_enable,
             "ad_prompt": self.ad_prompt,
             "ad_negative_prompt": self.ad_negative_prompt,
             "ad_confidence": self.ad_confidence,
@@ -219,6 +237,13 @@ class ADetailer:
             "ad_steps": self.ad_steps,
             "ad_use_cfg_scale": self.ad_use_cfg_scale,
             "ad_cfg_scale": self.ad_cfg_scale,
+            "ad_use_checkpoint": self.ad_use_checkpoint,
+            "ad_checkpoint": self.ad_checkpoint,
+            "ad_use_vae": self.ad_use_vae,
+            "ad_vae": self.ad_vae,
+            "ad_use_sampler": self.ad_use_sampler,
+            "ad_sampler": self.ad_sampler,
+            "ad_scheduler": self.ad_scheduler,
             "ad_use_noise_multiplier": self.ad_use_noise_multiplier,
             "ad_noise_multiplier": self.ad_noise_multiplier,
             "ad_use_clip_skip": self.ad_use_clip_skip,
@@ -606,6 +631,11 @@ class WebUIApi:
         hr_second_pass_steps=0,
         hr_resize_x=0,
         hr_resize_y=0,
+        hr_checkpoint_name=None,
+        hr_sampler_name=None,
+        hr_scheduler=None,
+        hr_prompt="",
+        hr_negative_prompt="",
         prompt="",
         styles=[],
         seed=-1,
@@ -667,6 +697,11 @@ class WebUIApi:
             "hr_second_pass_steps": hr_second_pass_steps,
             "hr_resize_x": hr_resize_x,
             "hr_resize_y": hr_resize_y,
+            "hr_checkpoint_name": hr_checkpoint_name,
+            "hr_sampler_name": hr_sampler_name,
+            "hr_scheduler": hr_scheduler,
+            "hr_prompt": hr_prompt,
+            "hr_negative_prompt": hr_negative_prompt,
             "denoising_strength": denoising_strength,
             "firstphase_width": firstphase_width,
             "firstphase_height": firstphase_height,
