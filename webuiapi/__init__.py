@@ -53,5 +53,6 @@ __all__ = [
     "SegmentAnythingGinoResult",
     "SegmentAnythingControlNetSegRandomResult",
     "SegmentAnythingControlNetSegNotRandomResult",
-    "SegmentAnythingSemanticSegWithCatIdResult"
+    "SegmentAnythingSemanticSegWithCatIdResult",
+    "TaggerInterface"
 ]
