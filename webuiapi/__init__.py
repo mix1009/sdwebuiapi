@@ -24,7 +24,8 @@ from .webuiapi import (
     SegmentAnythingGinoResult,
     SegmentAnythingControlNetSegRandomResult,
     SegmentAnythingControlNetSegNotRandomResult,
-    SegmentAnythingSemanticSegWithCatIdResult
+    SegmentAnythingSemanticSegWithCatIdResult,
+    TaggerInterface
 )
 
 __version__ = "0.9.16"

@@ -1093,7 +1093,7 @@ class WebUIApi:
 
         response = self.session.post(url=f"{self.baseurl}/interrogate", json=payload)
         return self._to_api_result(response)
-        
+
     def list_prompt_gen_models(self):
         r = self.custom_get("promptgen/list_models")
         return r['available_models']
@@ -2002,3 +2002,31 @@ class SegmentAnythingInterface:
             masked_image=Image.open(io.BytesIO(base64.b64decode(r["masked_image"]))),
             resized_input=Image.open(io.BytesIO(base64.b64decode(r["resized_input"])))
         )
+
+# https://github.com/Akegarasu/sd-webui-wd14-tagger
+
+class TaggerInterface:
+    def __init__(self, webuiapi: WebUIApi):
+        self.api = webuiapi
+
+    def tagger_interrogate(self, image, model="wd14-vit-v2-git", threshold=0.0, use_async=False):
+        """
+        Interrogates the tagger model with the provided image and parameters.
+
+        Args:
+            image (Image.Image or str): The image to be interrogated. Can be a PIL Image object or a base64 encoded string.
+            model (str, optional): The model to use for interrogation. Defaults to "wd14-vit-v2-git".
+            threshold (float, optional): The threshold value for the model. Defaults to 0.
+            use_async (bool, optional): Whether to use asynchronous processing. Defaults to False.
+
+        Returns:
+            WebUIApiResult.info: The information returned by the web API.
+        """
+        payload = {
+            "image": b64_img(image) if isinstance(image, Image.Image) else image,
+            "model": model,
+            "threshold": threshold
+        }
+        return self.api.custom_post("tagger/v1/interrogate", payload=payload, use_async=use_async)
+    def tagger_interrogators(self):
+        return self.api.custom_get("tagger/v1/interrogators")
