@@ -2009,14 +2009,14 @@ class TaggerInterface:
     def __init__(self, webuiapi: WebUIApi):
         self.api = webuiapi
 
-    def tagger_interrogate(self, image, model="wd14-vit-v2-git", threshold=0.0, use_async=False):
+    def tagger_interrogate(self, image, model="wd14-vit-v2-git", threshold=0.3, use_async=False):
         """
         Interrogates the tagger model with the provided image and parameters.
 
         Args:
             image (Image.Image or str): The image to be interrogated. Can be a PIL Image object or a base64 encoded string.
             model (str, optional): The model to use for interrogation. Defaults to "wd14-vit-v2-git".
-            threshold (float, optional): The threshold value for the model. Defaults to 0.
+            threshold (float, optional): The threshold value for the model. Defaults to 0.3
             use_async (bool, optional): Whether to use asynchronous processing. Defaults to False.
 
         Returns:
