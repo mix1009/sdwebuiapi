@@ -506,6 +506,16 @@ semantic_seg_result = segment.sam_and_semantic_seg_with_cat_id(
 )
 ```
 
+### Extension support - Tagger (contributed by C-BP)
+
+```python
+# https://github.com/Akegarasu/sd-webui-wd14-tagger
+
+tagger = webuiapi.TaggerInterface(api)
+result = tagger.tagger_interrogate(image)
+print(result)
+# {"caption": {"additionalProp1":0.9,"additionalProp2": 0.8,"additionalProp3": 0.7}}
+```
 ### Extension support - ADetailer (contributed by tomj2ee and davidmartinrius)
 #### txt2img with ADetailer
 ```
